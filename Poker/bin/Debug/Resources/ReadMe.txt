@@ -1,0 +1,1 @@
+ The file Statistics.txt contains encrypted statistics data. If you delete any of this data, you will lose any progress in the game(cash, money inside your wallet etc ).

@@ -1,0 +1,87 @@
+﻿<Page x:Name="RedOrBlack1" x:Class="Poker.RedOrBlack"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:Poker"
+      mc:Ignorable="d" 
+      ShowsNavigationUI="False"
+      FontFamily="Segoe UI Black" Title="RedOrBlack" Loaded="RedOrBlack1_Loaded" Width="1066" Height="520" >
+    <Page.Background>
+        <RadialGradientBrush>
+            <GradientStop Color="#FF2084BF" Offset="0"/>
+            <GradientStop Color="#FF084983" Offset="1"/>
+        </RadialGradientBrush>
+    </Page.Background>
+    <StackPanel x:Name="RedOrBlackMain">
+        <StackPanel x:Name="Top" Orientation="Horizontal" Height="200" VerticalAlignment="Top" HorizontalAlignment="Right" Width="1022" Margin="0">
+            <StackPanel Orientation="Horizontal">
+                <Image  x:Name="GuessingCard" Source="Resources/backdesign_4.png" UseLayoutRounding="True"  Stretch="Uniform" Cursor="Hand" Height="160" Margin="21,20,-129,20" Panel.ZIndex="6"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Image  x:Name="card1" Source=" Resources/backdesign_4.png" UseLayoutRounding="True"  Stretch="Uniform"  Height="160" Margin="216,0,-57,0" Panel.ZIndex="1"/>
+                <Image  x:Name="card2" Source=" Resources/backdesign_4.png" UseLayoutRounding="True"  Stretch="Uniform"  Height="160" Margin="0,0,-57,0" Panel.ZIndex="2"/>
+                <Image  x:Name="card3" Source=" Resources/backdesign_4.png" UseLayoutRounding="True"  Stretch="Uniform"  Height="160" Margin="0,0,-57,0" Panel.ZIndex="3"/>
+                <Image  x:Name="card4" Source=" Resources/backdesign_4.png" UseLayoutRounding="True"  Stretch="Uniform"  Height="160" Margin="0,0,-57,0" Panel.ZIndex="4"/>
+                <Image  x:Name="card5" Source=" Resources/backdesign_4.png" UseLayoutRounding="True"  Stretch="Uniform"  Height="160" Margin="0,20,-57,20" Panel.ZIndex="5"/>
+                <Image  x:Name="card6" Source=" Resources/backdesign_4.png" UseLayoutRounding="True"  Stretch="Uniform"  Height="160" Margin="0,20,4,20" Panel.ZIndex="6"/>
+            </StackPanel>
+
+            <StackPanel Height="160" Width="54">
+                <Border x:Name="B6" Height="22" Width="50" Margin="2,4,2,2" Background="Red" CornerRadius="3" BorderBrush="#FFF3F4F5" BorderThickness="3">
+                    <TextBlock x:Name="TB6" Text="64X" Foreground="#FFF3F4F5" FontFamily="Segoe UI Black" FontSize="18" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <Border x:Name="B5" Height="22" Width="50" Margin="2" Background="Red" CornerRadius="3" BorderBrush="#FFF3F4F5" BorderThickness="3">
+                    <TextBlock x:Name="TB5" Text="32X" FontFamily="Segoe UI Black" FontSize="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFF3F4F5"/>
+                </Border>
+                <Border x:Name="B4" Height="22" Width="50" Margin="2" Background="Red" CornerRadius="3" BorderBrush="#FFF3F4F5" BorderThickness="3">
+                    <TextBlock x:Name="TB4" Text="16X" FontFamily="Segoe UI Black" FontSize="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFF3F4F5"/>
+                </Border>
+                <Border x:Name="B3" Height="22" Width="50" Margin="2" Background="Red" CornerRadius="3" BorderBrush="#FFF3F4F5" BorderThickness="3">
+                    <TextBlock x:Name="TB3" Text="8X" FontFamily="Segoe UI Black" FontSize="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFF3F4F5"/>
+                </Border>
+                <Border x:Name="B2" Height="22" Width="50" Margin="2" Background="Red" CornerRadius="3" BorderBrush="#FFF3F4F5" BorderThickness="3">
+                    <TextBlock x:Name="TB2" Text="4X" FontFamily="Segoe UI Black" FontSize="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFF3F4F5"/>
+                </Border>
+                <Border x:Name="B1" Height="22" Width="50" Margin="2,2,2,0" Background="Red" CornerRadius="3" BorderBrush="#FFF3F4F5" BorderThickness="3">
+                    <TextBlock x:Name="TB1" Text="2X" FontFamily="Segoe UI Black" FontSize="16" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFF3F4F5"/>
+                </Border>
+            </StackPanel>
+            <StackPanel Margin="5,0,0,0">
+                <Label x:Name="LblWin" Content="WIN" Width="209" Margin="0" FontWeight="Bold" FontSize="72" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFFFF2F2" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0"/>
+                <Label x:Name="LblWinCount" Content="000000" Margin="0" Foreground="#FFFFF2F2" VerticalAlignment="Center" HorizontalAlignment="Center" ScrollViewer.VerticalScrollBarVisibility="Disabled" FontSize="72" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0" UseLayoutRounding="False"/>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel x:Name="Middle" Orientation="Horizontal" Width="1021" Height="188" Margin="0">
+            <Image x:Name="originalCard1" Source="Resources/backdesign_4.png" Margin="43,0,0,0" Height="148"/>
+            <TextBlock x:Name="tcard1" Text="WIN" RenderTransformOrigin="-2.333,0.42" Margin="-133,65,-27,65" Height="58" Panel.ZIndex="2" Width="106" FontSize="42" Foreground="Red" Padding="0" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" ScrollViewer.VerticalScrollBarVisibility="Disabled" TextOptions.TextHintingMode="Fixed" Background="#CD015397" />
+            <Image x:Name="originalCard2" Source="Resources/backdesign_4.png" Height="148" Margin="20,0,0,0"/>
+            <TextBlock x:Name="tcard2" Text="WIN" RenderTransformOrigin="-2.333,0.42" Margin="-133,65,-27,65" Height="58" Panel.ZIndex="2" Width="106" FontSize="42" Foreground="Red" Padding="0" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" ScrollViewer.VerticalScrollBarVisibility="Disabled" TextOptions.TextHintingMode="Fixed" Background="#CD015397" />
+
+            <Image x:Name="originalCard3" Source="Resources/backdesign_4.png" Height="148" Margin="20,0,0,0"/>
+            <TextBlock x:Name="tcard3" Text="WIN" RenderTransformOrigin="-2.333,0.42" Margin="-133,65,-27,65" Height="58" Panel.ZIndex="2" Width="106" FontSize="42" Foreground="Red" Padding="0" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" ScrollViewer.VerticalScrollBarVisibility="Disabled" TextOptions.TextHintingMode="Fixed" Background="#CD015397" />
+
+            <Image x:Name="originalCard4" Source="Resources/backdesign_4.png" Height="148" Margin="20,0,0,0"/>
+            <TextBlock x:Name="tcard4" Text="WIN" RenderTransformOrigin="-2.333,0.42" Margin="-133,65,-27,65" Height="58" Panel.ZIndex="2" Width="106" FontSize="42" Foreground="Red" Padding="0" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" ScrollViewer.VerticalScrollBarVisibility="Disabled" TextOptions.TextHintingMode="Fixed" Background="#CD015397" />
+
+            <Image x:Name="originalCard5" Source="Resources/backdesign_4.png" Height="148" Margin="20,0,0,0"/>
+            <TextBlock x:Name="tcard5" Text="WIN" RenderTransformOrigin="-2.333,0.42" Margin="-133,65,-27,65" Height="58" Panel.ZIndex="2" Width="106" FontSize="42" Foreground="Red" Padding="0" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center" ScrollViewer.VerticalScrollBarVisibility="Disabled" TextOptions.TextHintingMode="Fixed" Background="#CD015397" />
+
+            <Label x:Name="LblHand" Content="HAND" FontSize="48" Foreground="#FFFFF2F2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Height="130" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="20,0,0,0" Width="310" Padding="5" Grid.IsSharedSizeScope="True"/>
+        </StackPanel>
+        <StackPanel x:Name="Bottom" Orientation="Horizontal" Width="1064" Height="132" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center" >
+            <StackPanel x:Name="logoSP" Margin="0">
+                <Image x:Name="logoImage" Source="Resources/LogoR.png" Width="234" Margin="0,-55,0,0"/>
+            </StackPanel>
+            <StackPanel x:Name="RedBStackPanel" Orientation="Horizontal" Margin="0">
+                <Button x:Name="RedButton" Content="RED" Foreground="White" FontSize="48"  HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="188" Height="100" PreviewMouseLeftButtonDown="RedButton_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="RedButton_PreviewMouseLeftButtonUp"  />
+            </StackPanel>
+            <StackPanel x:Name="BlackBStackPanel" Orientation="Horizontal" Margin="14,0,0,0">
+                <Button x:Name="BlackButton" Content="BLACK"  Foreground="Black"  FontSize="48"  HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="188" Height="100" PreviewMouseLeftButtonDown="BlackButton_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="BlackButton_PreviewMouseLeftButtonUp" />
+            </StackPanel>
+            <StackPanel x:Name="CollectBStackPanel" Orientation="Horizontal" Margin="100,0,0,0">
+                <Button x:Name="CollectButton" Content="COLLECT" Foreground="White"  FontSize="48" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Width="240" Height="100" Click="CollectButton_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</Page>
