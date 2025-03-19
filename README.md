@@ -66,5 +66,5 @@ Requires Microsoft .NET Framework 3.0 or higher
 
 🔗 Where to Get the Game
 
-🎮 Available for purchase on Steam
+🎮 Available for purchase on Steam  https://store.steampowered.com/app/1123850/Red_Black_Poker/
 
