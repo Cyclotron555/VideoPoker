@@ -1,10 +1,25 @@
 import 'hand_rank.dart';
 import 'playing_card.dart';
 
+class HandEvaluation {
+  const HandEvaluation({
+    required this.rank,
+    required this.qualifyingHighPair,
+  });
+
+  final HandRank rank;
+
+  /// True only when the final hand is exactly one pair of Jacks, Queens,
+  /// Kings, or Aces. Higher poker hands do not also award a bonus token.
+  final bool qualifyingHighPair;
+}
+
 class HandEvaluator {
   const HandEvaluator();
 
-  HandRank evaluate(List<PlayingCard> hand) {
+  HandRank evaluate(List<PlayingCard> hand) => evaluateDetailed(hand).rank;
+
+  HandEvaluation evaluateDetailed(List<PlayingCard> hand) {
     if (hand.length != 5) {
       throw ArgumentError.value(hand.length, 'hand.length', 'Must contain 5 cards');
     }
@@ -15,18 +30,20 @@ class HandEvaluator {
     ];
 
     if (jokerIndexes.isEmpty) {
-      return _evaluateNatural(hand);
+      return _evaluateNaturalDetailed(hand);
     }
 
-    // Red Black Poker has one Joker. Evaluate every legal rank/suit identity
-    // the Joker could assume and keep the highest-paying resulting hand.
     if (jokerIndexes.length != 1) {
       throw StateError('Red Black Poker uses exactly one Joker.');
     }
 
-    var best = HandRank.none;
     final jokerIndex = jokerIndexes.single;
+    var bestRank = HandRank.none;
+    var highPair = false;
 
+    // The single Joker is wild. Try every rank/suit identity and keep the
+    // strongest paid result. If no paid hand exists, remember whether any
+    // substitution creates exactly one high pair.
     for (final suit in CardSuit.values) {
       for (var rank = 1; rank <= 13; rank++) {
         final candidate = List<PlayingCard>.of(hand);
@@ -36,17 +53,21 @@ class HandEvaluator {
           assetId: -1,
         );
 
-        final result = _evaluateNatural(candidate);
-        if (result.basePayout > best.basePayout) {
-          best = result;
+        final natural = _evaluateNaturalDetailed(candidate);
+        if (natural.rank.basePayout > bestRank.basePayout) {
+          bestRank = natural.rank;
         }
+        highPair = highPair || natural.qualifyingHighPair;
       }
     }
 
-    return best;
+    return HandEvaluation(
+      rank: bestRank,
+      qualifyingHighPair: bestRank == HandRank.none && highPair,
+    );
   }
 
-  HandRank _evaluateNatural(List<PlayingCard> hand) {
+  HandEvaluation _evaluateNaturalDetailed(List<PlayingCard> hand) {
     final ranks = hand.map(_highRank).toList()..sort();
     final counts = <int, int>{};
 
@@ -59,26 +80,44 @@ class HandEvaluator {
     final straight = _isStraight(ranks);
     final royal = ranks.toSet().containsAll(<int>{10, 11, 12, 13, 14});
 
-    if (multiplicities.contains(5)) return HandRank.fiveOfAKind;
-    if (flush && royal) return HandRank.royalFlush;
-    if (flush && straight) return HandRank.straightFlush;
-    if (multiplicities.contains(4)) return HandRank.fourOfAKind;
-
-    if (multiplicities.length == 2 &&
+    HandRank rank;
+    if (multiplicities.contains(5)) {
+      rank = HandRank.fiveOfAKind;
+    } else if (flush && royal) {
+      rank = HandRank.royalFlush;
+    } else if (flush && straight) {
+      rank = HandRank.straightFlush;
+    } else if (multiplicities.contains(4)) {
+      rank = HandRank.fourOfAKind;
+    } else if (multiplicities.length == 2 &&
         multiplicities[0] == 2 &&
         multiplicities[1] == 3) {
-      return HandRank.fullHouse;
+      rank = HandRank.fullHouse;
+    } else if (flush) {
+      rank = HandRank.flush;
+    } else if (straight) {
+      rank = HandRank.straight;
+    } else if (multiplicities.contains(3)) {
+      rank = HandRank.threeOfAKind;
+    } else if (multiplicities.where((count) => count == 2).length == 2) {
+      rank = HandRank.twoPair;
+    } else {
+      rank = HandRank.none;
     }
 
-    if (flush) return HandRank.flush;
-    if (straight) return HandRank.straight;
-    if (multiplicities.contains(3)) return HandRank.threeOfAKind;
+    final pairRanks = counts.entries
+        .where((entry) => entry.value == 2)
+        .map((entry) => entry.key)
+        .toList(growable: false);
 
-    if (multiplicities.where((count) => count == 2).length == 2) {
-      return HandRank.twoPair;
-    }
+    final qualifyingHighPair = rank == HandRank.none &&
+        pairRanks.length == 1 &&
+        const <int>{11, 12, 13, 14}.contains(pairRanks.single);
 
-    return HandRank.none;
+    return HandEvaluation(
+      rank: rank,
+      qualifyingHighPair: qualifyingHighPair,
+    );
   }
 
   int _highRank(PlayingCard card) => card.rank == 1 ? 14 : card.rank;
@@ -89,7 +128,6 @@ class HandEvaluator {
 
     if (unique.last - unique.first == 4) return true;
 
-    // A-2-3-4-5 wheel.
     return unique[0] == 2 &&
         unique[1] == 3 &&
         unique[2] == 4 &&
