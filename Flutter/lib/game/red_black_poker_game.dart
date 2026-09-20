@@ -328,7 +328,7 @@ class RedBlackPokerGame extends FlameGame {
 
     _paintText(
       canvas,
-      'JACKS OR BETTER  →  ZOMBIE HEAD',
+      'HIGH PAIR J / Q / K / A  →  ZOMBIE HEAD',
       ui.Offset(size.x * 0.5, top + height - size.y * 0.007),
       fontSize: size.x * 0.024,
       color: const Color(0xFFB6DB7B),
