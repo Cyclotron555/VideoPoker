@@ -189,6 +189,7 @@ class RedBlackPokerGame extends FlameGame {
         Color(0xFF151018),
         Color(0xFF09090D),
       ],
+      const <double>[0.0, 0.52, 1.0],
     );
     canvas.drawRect(rect, ui.Paint()..shader = gradient);
 
