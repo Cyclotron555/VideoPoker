@@ -85,6 +85,20 @@ void main() {
     expect(result.qualifyingHighPair, isFalse);
   });
 
+  test('Joker plus a natural pair becomes three of a kind, not bonus pair', () {
+    final hand = <PlayingCard>[
+      c(4, CardSuit.clubs),
+      c(10, CardSuit.hearts),
+      const PlayingCard.joker(),
+      c(10, CardSuit.clubs),
+      c(11, CardSuit.spades),
+    ];
+
+    final result = evaluator.evaluateDetailed(hand);
+    expect(result.rank, HandRank.threeOfAKind);
+    expect(result.qualifyingHighPair, isFalse);
+  });
+
   test('Joker can complete a qualifying high pair', () {
     final hand = <PlayingCard>[
       const PlayingCard.joker(),
