@@ -6,6 +6,7 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
+import 'model/auto_hold_advisor.dart';
 import 'model/hand_rank.dart';
 import 'model/poker_round.dart';
 import 'model/red_black_session.dart';
@@ -21,7 +22,10 @@ class RedBlackPokerGame extends FlameGame {
   final Map<int, ui.Image> _cardImages = <int, ui.Image>{};
   final List<bool> _revealed = List<bool>.filled(5, false);
 
+  final AutoHoldAdvisor _autoHoldAdvisor = const AutoHoldAdvisor();
   Duration cardDisplayDelay = const Duration(milliseconds: 275);
+  Duration autoHoldInitialDelay = const Duration(milliseconds: 120);
+  Duration autoHoldStepDelay = const Duration(milliseconds: 275);
   bool _isAnimatingCards = false;
   bool _redBlackMode = false;
   RedBlackSession? _redBlackSession;
@@ -263,8 +267,26 @@ class RedBlackPokerGame extends FlameGame {
       _syncView();
     }
 
+    await _applyAutoHold();
+
     _isAnimatingCards = false;
     _syncView();
+  }
+
+  Future<void> _applyAutoHold() async {
+    if (round.cards.length != 5 || round.phase != RoundPhase.chooseHolds) return;
+
+    final decision = _autoHoldAdvisor.recommend(round.cards);
+    if (!decision.held.any((value) => value)) return;
+
+    await Future<void>.delayed(autoHoldInitialDelay);
+
+    for (var i = 0; i < decision.held.length; i++) {
+      if (!decision.held[i]) continue;
+      round.held[i] = true;
+      _syncView();
+      await Future<void>.delayed(autoHoldStepDelay);
+    }
   }
 
   Future<void> _drawAnimated() async {
