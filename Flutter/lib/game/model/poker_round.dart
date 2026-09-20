@@ -3,13 +3,14 @@ import 'hand_evaluator.dart';
 import 'hand_rank.dart';
 import 'playing_card.dart';
 
-enum RoundPhase { idle, chooseHolds, result }
+enum RoundPhase { idle, chooseHolds, result, bonusReady }
 
 class PokerRound {
   PokerRound({
     Deck? deck,
     HandEvaluator? evaluator,
     this.startingCredits = 10,
+    this.bonusTarget = 10,
   })  : _deck = deck ?? Deck(),
         _evaluator = evaluator ?? const HandEvaluator(),
         credits = startingCredits;
@@ -17,6 +18,10 @@ class PokerRound {
   final Deck _deck;
   final HandEvaluator _evaluator;
   final int startingCredits;
+
+  /// Halloween uses ten zombie heads. This is deliberately configurable so
+  /// another theme can visualize the same mechanic differently.
+  final int bonusTarget;
 
   final List<PlayingCard> cards = <PlayingCard>[];
   final List<bool> held = List<bool>.filled(5, false);
@@ -26,12 +31,15 @@ class PokerRound {
   int credits;
   int bet = 1;
   int lastWin = 0;
+  int bonusProgress = 0;
 
-  bool get canDeal => phase != RoundPhase.chooseHolds && credits >= bet;
+  bool get canDeal =>
+      phase != RoundPhase.chooseHolds && phase != RoundPhase.bonusReady && credits >= bet;
   bool get canDraw => phase == RoundPhase.chooseHolds;
+  bool get bonusReady => bonusProgress >= bonusTarget;
 
   void changeBet(int delta) {
-    if (phase == RoundPhase.chooseHolds) return;
+    if (phase == RoundPhase.chooseHolds || phase == RoundPhase.bonusReady) return;
     bet = (bet + delta).clamp(1, 100);
   }
 
@@ -68,9 +76,22 @@ class PokerRound {
       }
     }
 
-    result = _evaluator.evaluate(cards);
+    final evaluation = _evaluator.evaluateDetailed(cards);
+    result = evaluation.rank;
     lastWin = result.basePayout * bet;
     credits += lastWin;
+
+    if (evaluation.qualifyingHighPair) {
+      bonusProgress = (bonusProgress + 1).clamp(0, bonusTarget);
+    }
+
+    phase = bonusReady ? RoundPhase.bonusReady : RoundPhase.result;
+  }
+
+  /// Called after the Red-or-Black bonus session has been entered.
+  void consumeBonus() {
+    if (!bonusReady) return;
+    bonusProgress = 0;
     phase = RoundPhase.result;
   }
 }
