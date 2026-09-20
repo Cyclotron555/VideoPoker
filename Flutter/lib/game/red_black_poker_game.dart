@@ -14,6 +14,12 @@ class RedBlackPokerGame extends FlameGame {
 
   final List<_CardView> _cardViews = <_CardView>[];
   final Map<int, ui.Image> _cardImages = <int, ui.Image>{};
+  final List<bool> _revealed = List<bool>.filled(5, false);
+
+  // Matches the legacy game's Medium card-display speed. The original
+  // presets were 350 ms (slow), 275 ms (medium), and 200 ms (fast).
+  Duration cardDisplayDelay = const Duration(milliseconds: 275);
+  bool _isAnimatingCards = false;
 
   late final _GameButton _dealButton;
   late final _GameButton _drawButton;
@@ -51,8 +57,7 @@ class RedBlackPokerGame extends FlameGame {
       label: 'DEAL',
       accent: const Color(0xFF28B84B),
       onPressed: () {
-        round.deal();
-        _syncView();
+        _dealAnimated();
       },
     );
 
@@ -60,8 +65,7 @@ class RedBlackPokerGame extends FlameGame {
       label: 'DRAW',
       accent: const Color(0xFFBD1722),
       onPressed: () {
-        round.draw();
-        _syncView();
+        _drawAnimated();
       },
     );
 
@@ -154,19 +158,68 @@ class RedBlackPokerGame extends FlameGame {
       ..size = Vector2(smallButtonWidth, buttonHeight);
   }
 
+  Future<void> _dealAnimated() async {
+    if (_isAnimatingCards || !round.canDeal) return;
+
+    _isAnimatingCards = true;
+    round.deal();
+
+    for (var i = 0; i < _revealed.length; i++) {
+      _revealed[i] = false;
+    }
+    _syncView();
+
+    for (var i = 0; i < round.cards.length; i++) {
+      await Future<void>.delayed(cardDisplayDelay);
+      _revealed[i] = true;
+      _syncView();
+    }
+
+    _isAnimatingCards = false;
+    _syncView();
+  }
+
+  Future<void> _drawAnimated() async {
+    if (_isAnimatingCards || !round.canDraw) return;
+
+    _isAnimatingCards = true;
+    final heldBeforeDraw = List<bool>.of(round.held);
+    round.draw();
+
+    // Held cards stay visible. Replacement cards go face-down/blank briefly
+    // and then reveal one at a time, matching the original machine.
+    for (var i = 0; i < _revealed.length; i++) {
+      _revealed[i] = heldBeforeDraw[i];
+    }
+    _syncView();
+
+    for (var i = 0; i < round.cards.length; i++) {
+      if (heldBeforeDraw[i]) continue;
+      await Future<void>.delayed(cardDisplayDelay);
+      _revealed[i] = true;
+      _syncView();
+    }
+
+    _isAnimatingCards = false;
+    _syncView();
+  }
+
   void _syncView() {
     for (var i = 0; i < _cardViews.length; i++) {
       final hasCard = i < round.cards.length;
       _cardViews[i]
-        ..cardImage = hasCard ? _cardImages[round.cards[i].assetId] : null
-        ..held = round.held[i]
-        ..enabled = round.canDraw;
+        ..cardImage = hasCard && _revealed[i]
+            ? _cardImages[round.cards[i].assetId]
+            : null
+        ..held = round.held[i] && _revealed[i]
+        ..enabled = round.canDraw && !_isAnimatingCards;
     }
 
-    _dealButton.enabled = round.canDeal;
-    _drawButton.enabled = round.canDraw;
-    _betOneButton.enabled =
-        round.phase != RoundPhase.chooseHolds && round.phase != RoundPhase.bonusReady;
+    _dealButton.enabled = round.canDeal && !_isAnimatingCards;
+    _drawButton.enabled = round.canDraw && !_isAnimatingCards;
+    _betOneButton.enabled = !_isAnimatingCards &&
+        round.phase != RoundPhase.chooseHolds &&
+        round.phase != RoundPhase.bonusReady;
     _betMaxButton.enabled = _betOneButton.enabled;
   }
 
