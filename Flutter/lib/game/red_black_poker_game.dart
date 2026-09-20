@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:flame/cache.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
@@ -25,6 +26,10 @@ class RedBlackPokerGame extends FlameGame {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+
+    // Our legacy card faces live in assets/cards rather than Flame's
+    // conventional assets/images directory, so use an asset-rooted cache.
+    images = Images(prefix: 'assets/');
 
     for (var id = 0; id <= 52; id++) {
       _cardImages[id] = await images.load('cards/' + id.toString() + '.png');
