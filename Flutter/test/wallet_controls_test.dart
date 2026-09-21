@@ -21,6 +21,19 @@ void main() {
     expect(round.bank, 4512);
   });
 
+  test('refill wallet appears only when wallet is empty', () {
+    final round = PokerRound(startingCredits: 25, startingWallet: 50);
+
+    expect(round.canRefillWallet, isFalse);
+    round.insertCoins(50);
+    expect(round.wallet, 0);
+    expect(round.canRefillWallet, isTrue);
+
+    expect(round.refillWallet(), 50);
+    expect(round.wallet, 50);
+    expect(round.canRefillWallet, isFalse);
+  });
+
   test('bet controls stay within one through five', () {
     final round = PokerRound();
 
