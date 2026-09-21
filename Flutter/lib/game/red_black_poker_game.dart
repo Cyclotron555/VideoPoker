@@ -1330,7 +1330,7 @@ class _GameButton extends PositionComponent with TapCallbacks {
 
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(
-        ui.Rect.fromLTWH(0, size.y * 0.08, size.x, math.max(1, rect.height - size.y * 0.04)),
+        ui.Rect.fromLTWH(0, size.y * 0.08, size.x, (rect.height - size.y * 0.04 > 1.0 ? rect.height - size.y * 0.04 : 1.0)),
         const ui.Radius.circular(9),
       ),
       ui.Paint()..color = const Color(0xFF07080A),
