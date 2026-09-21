@@ -432,6 +432,9 @@ class RedBlackPokerGame extends FlameGame {
       _redButton.enabled = session?.canGuess ?? false;
       _blackButton.enabled = session?.canGuess ?? false;
       _rbCollectButton.enabled = session?.canCollect ?? false;
+      _redButton.lit = _redButton.enabled;
+      _blackButton.lit = _blackButton.enabled;
+      _rbCollectButton.lit = _rbCollectButton.enabled;
       return;
     }
 
@@ -453,6 +456,10 @@ class RedBlackPokerGame extends FlameGame {
     _mainDrawButton.enabled =
         round.canPressMainDraw && !_isAnimatingCards;
     _mainDrawButton.lit = _mainDrawButton.enabled;
+    _mainDrawButton.label = round.canStartHand ? 'DEAL' : 'DRAW';
+    _mainDrawButton.accent = round.canStartHand
+        ? const Color(0xFF23853A)
+        : const Color(0xFF175C8F);
     _betOneButton.enabled = !_isAnimatingCards &&
         (round.phase == RoundPhase.idle || round.phase == RoundPhase.result);
     _betMaxButton.enabled = _betOneButton.enabled;
@@ -1264,8 +1271,8 @@ class _GameButton extends PositionComponent with TapCallbacks {
     required this.onPressed,
   });
 
-  final String label;
-  final Color accent;
+  String label;
+  Color accent;
   final VoidCallback onPressed;
   bool enabled = true;
   bool lit = false;
