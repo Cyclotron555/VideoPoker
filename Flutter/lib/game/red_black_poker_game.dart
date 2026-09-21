@@ -23,6 +23,13 @@ class RedBlackPokerGame extends FlameGame {
   final List<_CardView> _cardViews = <_CardView>[];
   final Map<int, ui.Image> _cardImages = <int, ui.Image>{};
   final List<bool> _revealed = List<bool>.filled(5, false);
+  final List<ui.Image> _zombieHeadImages = <ui.Image>[];
+  final List<ui.Image> _cardBackImages = <ui.Image>[];
+  ui.Image? _titleBannerArt;
+  ui.Image? _backgroundArt;
+  ui.Image? _paytableArt;
+  ui.Image? _bottomPanelArt;
+  ui.Image? _controlPanelHeaderArt;
 
   final AutoHoldAdvisor _autoHoldAdvisor = const AutoHoldAdvisor();
   Duration cardDisplayDelay = const Duration(milliseconds: 275);
@@ -87,6 +94,21 @@ class RedBlackPokerGame extends FlameGame {
 
     for (var id = 0; id <= 52; id++) {
       _cardImages[id] = await images.load('cards/' + id.toString() + '.png');
+    }
+
+    _titleBannerArt = await images.load('title_banner.jpg');
+    _backgroundArt = await images.load('background_main.jpg');
+    _paytableArt = await images.load('paytable_frame.jpg');
+    _bottomPanelArt = await images.load('bottom_panel.jpg');
+    _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
+
+    for (var i = 0; i < 10; i++) {
+      _zombieHeadImages.add(
+        await images.load('zombie_' + (i + 1).toString().padLeft(2, '0') + '.jpg'),
+      );
+    }
+    for (var i = 0; i < 4; i++) {
+      _cardBackImages.add(await images.load('card_back_' + i.toString() + '.jpg'));
     }
 
     for (var i = 0; i < 5; i++) {
@@ -632,6 +654,9 @@ class RedBlackPokerGame extends FlameGame {
             _revealed[i]
         ..winning = i < winningMask.length && winningMask[i] && _revealed[i]
         ..backVariant = _cardBackVariant
+        ..backImage = _cardBackImages.isEmpty
+            ? null
+            : _cardBackImages[_cardBackVariant % _cardBackImages.length]
         ..enabled = round.canDrawReplacement && !_isAnimatingCards;
     }
 
@@ -829,15 +854,25 @@ class RedBlackPokerGame extends FlameGame {
         ..color = const Color(0xFF7B4B28),
     );
 
-    _paintText(
-      canvas,
-      'CONTROL PANEL',
-      g.settingsTitleCenter,
-      fontSize: size.x * 0.060,
-      color: const Color(0xFFFFD27A),
-      weight: FontWeight.w900,
-      centered: true,
-    );
+    if (_controlPanelHeaderArt != null) {
+      final headerArtRect = ui.Rect.fromLTWH(
+        panel.left + panel.width * 0.06,
+        panel.top + panel.height * 0.025,
+        panel.width * 0.88,
+        panel.height * 0.105,
+      );
+      _drawImageCover(canvas, _controlPanelHeaderArt!, headerArtRect, opacity: 0.98);
+    } else {
+      _paintText(
+        canvas,
+        'CONTROL PANEL',
+        g.settingsTitleCenter,
+        fontSize: size.x * 0.060,
+        color: const Color(0xFFFFD27A),
+        weight: FontWeight.w900,
+        centered: true,
+      );
+    }
 
     _paintText(
       canvas,
@@ -930,6 +965,17 @@ class RedBlackPokerGame extends FlameGame {
     final g = _geometry;
     final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
 
+    canvas.drawRect(rect, ui.Paint()..color = const Color(0xFF030305));
+
+    if (_backgroundArt != null) {
+      _drawImageCover(
+        canvas,
+        _backgroundArt!,
+        rect,
+        opacity: 0.46,
+      );
+    }
+
     canvas.drawRect(
       rect,
       ui.Paint()
@@ -937,250 +983,160 @@ class RedBlackPokerGame extends FlameGame {
           rect.topCenter,
           rect.bottomCenter,
           const <Color>[
-            Color(0xFF03101A),
-            Color(0xFF091321),
-            Color(0xFF180A10),
-            Color(0xFF050305),
+            Color(0x33000000),
+            Color(0x6610060A),
+            Color(0xCC030205),
           ],
-          const <double>[0.0, 0.26, 0.62, 1.0],
+          const <double>[0.0, 0.55, 1.0],
         ),
     );
 
-    // Moon glow and haunted skyline.
-    final moonCenter = ui.Offset(size.x * 0.82, size.y * 0.07);
-    canvas.drawCircle(
-      moonCenter,
-      size.x * 0.12,
-      ui.Paint()
-        ..color = const Color(0x225EBFFF)
-        ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.10),
-    );
-    canvas.drawCircle(
-      moonCenter,
-      size.x * 0.065,
-      ui.Paint()..color = const Color(0xFFB6C6D6),
-    );
+    if (_titleBannerArt != null) {
+      _drawImageContain(canvas, _titleBannerArt!, g.titleBanner);
+    } else {
+      _paintText(
+        canvas,
+        'RED BLACK POKER',
+        g.titleBanner.center,
+        fontSize: size.x * 0.070,
+        color: const Color(0xFFFFC45C),
+        weight: FontWeight.w900,
+        centered: true,
+      );
+    }
 
-    final skyline = ui.Path()
-      ..moveTo(0, size.y * 0.20)
-      ..lineTo(size.x * 0.07, size.y * 0.17)
-      ..lineTo(size.x * 0.12, size.y * 0.19)
-      ..lineTo(size.x * 0.16, size.y * 0.13)
-      ..lineTo(size.x * 0.20, size.y * 0.19)
-      ..lineTo(size.x * 0.27, size.y * 0.15)
-      ..lineTo(size.x * 0.32, size.y * 0.19)
-      ..lineTo(size.x * 0.38, size.y * 0.12)
-      ..lineTo(size.x * 0.43, size.y * 0.19)
-      ..lineTo(size.x * 0.50, size.y * 0.14)
-      ..lineTo(size.x * 0.56, size.y * 0.19)
-      ..lineTo(size.x * 0.61, size.y * 0.11)
-      ..lineTo(size.x * 0.66, size.y * 0.19)
-      ..lineTo(size.x * 0.73, size.y * 0.15)
-      ..lineTo(size.x * 0.78, size.y * 0.19)
-      ..lineTo(size.x * 0.84, size.y * 0.12)
-      ..lineTo(size.x * 0.90, size.y * 0.19)
-      ..lineTo(size.x, size.y * 0.15)
-      ..lineTo(size.x, size.y * 0.30)
-      ..lineTo(0, size.y * 0.30)
-      ..close();
-    canvas.drawPath(skyline, ui.Paint()..color = const Color(0xCC030508));
-
-    // Outer gothic rails.
     final railPaint = ui.Paint()..color = const Color(0xFF261713);
     canvas.drawRect(ui.Rect.fromLTWH(0, 0, size.x * 0.018, size.y), railPaint);
     canvas.drawRect(
       ui.Rect.fromLTWH(size.x * 0.982, 0, size.x * 0.018, size.y),
       railPaint,
     );
-    for (var y = 0.0; y < size.y; y += size.y * 0.07) {
-      final boltY = y + size.y * 0.025;
-      canvas.drawCircle(
-        ui.Offset(size.x * 0.009, boltY),
-        size.x * 0.006,
-        ui.Paint()..color = const Color(0xFF8B6334),
-      );
-      canvas.drawCircle(
-        ui.Offset(size.x * 0.991, boltY),
-        size.x * 0.006,
-        ui.Paint()..color = const Color(0xFF8B6334),
+
+    if (_bottomPanelArt != null) {
+      _drawImageCover(canvas, _bottomPanelArt!, g.bottomArt, opacity: 0.96);
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(g.bottomArt, const ui.Radius.circular(12)),
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = const Color(0xFF8A5A2A),
       );
     }
-
-    // Main cabinet plate behind active content.
-    final cabinet = ui.Rect.fromLTWH(
-      size.x * 0.018,
-      size.y * 0.032,
-      size.x * 0.964,
-      math.min(size.y * 0.80, g.controlPanel.bottom + size.y * 0.055),
-    );
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(cabinet, const ui.Radius.circular(18)),
-      ui.Paint()..color = const Color(0x66120B0B),
-    );
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(cabinet, const ui.Radius.circular(18)),
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 2.4
-        ..color = const Color(0xFF5C3A22),
-    );
-
-    // Small bats around the title.
-    for (final p in <ui.Offset>[
-      ui.Offset(size.x * 0.11, size.y * 0.035),
-      ui.Offset(size.x * 0.18, size.y * 0.055),
-      ui.Offset(size.x * 0.72, size.y * 0.045),
-    ]) {
-      final bat = ui.Path()
-        ..moveTo(p.dx, p.dy)
-        ..quadraticBezierTo(p.dx - size.x * 0.018, p.dy - size.y * 0.010,
-            p.dx - size.x * 0.030, p.dy)
-        ..quadraticBezierTo(p.dx - size.x * 0.014, p.dy - size.y * 0.002,
-            p.dx, p.dy + size.y * 0.010)
-        ..quadraticBezierTo(p.dx + size.x * 0.014, p.dy - size.y * 0.002,
-            p.dx + size.x * 0.030, p.dy)
-        ..quadraticBezierTo(p.dx + size.x * 0.018, p.dy - size.y * 0.010,
-            p.dx, p.dy)
-        ..close();
-      canvas.drawPath(bat, ui.Paint()..color = const Color(0xFF050506));
-    }
-
-    _paintText(
-      canvas,
-      'RED BLACK POKER',
-      ui.Offset(size.x * 0.5, size.y * 0.021),
-      fontSize: size.x * 0.070,
-      color: const Color(0xFFFFC45C),
-      weight: FontWeight.w900,
-      centered: true,
-    );
   }
 
   void _renderZombieCabinet(ui.Canvas canvas) {
     final g = _geometry;
     final frame = g.zombieFrame;
-    final top = frame.top;
-    final height = frame.height;
-    final left = frame.left;
-    final width = frame.width;
 
     canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(frame, const ui.Radius.circular(10)),
-      ui.Paint()..color = const Color(0xFF111215),
+      ui.RRect.fromRectAndRadius(frame, const ui.Radius.circular(11)),
+      ui.Paint()..color = const Color(0xEE080709),
     );
     canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(frame, const ui.Radius.circular(10)),
+      ui.RRect.fromRectAndRadius(frame, const ui.Radius.circular(11)),
       ui.Paint()
         ..style = ui.PaintingStyle.stroke
         ..strokeWidth = 2.2
-        ..color = const Color(0xFF8B6334),
+        ..color = const Color(0xFF9A6331),
     );
 
     final gap = size.x * 0.006;
-    final cellWidth = (width - gap * 11) / 10;
-    final cellHeight = height - size.y * 0.025;
+    final cellWidth = (frame.width - gap * 11) / 10;
+    final cellHeight = frame.height - size.y * 0.017;
 
     for (var i = 0; i < 10; i++) {
-      final x = left + gap + i * (cellWidth + gap);
-      final cell = ui.Rect.fromLTWH(x, top + gap, cellWidth, cellHeight);
+      final cell = ui.Rect.fromLTWH(
+        frame.left + gap + i * (cellWidth + gap),
+        frame.top + size.y * 0.006,
+        cellWidth,
+        cellHeight,
+      );
       final earned = i < round.bonusProgress;
       final flaring = _bonusFlareIndex == i && _bonusFlareTimer > 0;
-      final complete = round.bonusProgress >= 10;
-      final flicker = 0.72 + 0.28 * math.sin(_uiTime * 9.0 + i * 1.7);
-      final flare = flaring ? 1.0 + _bonusFlareTimer * 0.55 : 1.0;
-      final glowStrength = (earned ? flicker * flare : 0.16).clamp(0.0, 1.65);
+      final flicker = 0.76 + 0.24 * math.sin(_uiTime * 9.0 + i * 1.7);
 
       canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(cell, const ui.Radius.circular(6)),
-        ui.Paint()..color = earned ? const Color(0xFF1D241A) : const Color(0xFF07080A),
-      );
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(cell, const ui.Radius.circular(6)),
-        ui.Paint()
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = flaring ? 2.2 : 1.2
-          ..color = earned ? const Color(0xFF8A6B36) : const Color(0xFF3B332B),
+        ui.RRect.fromRectAndRadius(cell, const ui.Radius.circular(5)),
+        ui.Paint()..color = const Color(0xFF050506),
       );
 
-      final headCenter = ui.Offset(cell.center.dx, cell.top + cell.height * 0.40);
-      final headRadius = cell.width * (flaring ? 0.28 : 0.25);
-      final headPaint = ui.Paint()
-        ..color = earned ? const Color(0xFF6F8051) : const Color(0xFF171A18);
-      canvas.drawOval(
-        ui.Rect.fromCenter(
-          center: headCenter,
-          width: headRadius * 1.65,
-          height: headRadius * 2.05,
-        ),
-        headPaint,
-      );
-
-      final jaw = ui.Path()
-        ..moveTo(headCenter.dx - headRadius * 0.62, headCenter.dy + headRadius * 0.45)
-        ..lineTo(headCenter.dx + headRadius * 0.62, headCenter.dy + headRadius * 0.45)
-        ..lineTo(headCenter.dx + headRadius * 0.40, headCenter.dy + headRadius * 1.05)
-        ..lineTo(headCenter.dx - headRadius * 0.40, headCenter.dy + headRadius * 1.05)
-        ..close();
-      canvas.drawPath(jaw, ui.Paint()..color = earned ? const Color(0xFF53633D) : const Color(0xFF111311));
-
-      final eyeY = headCenter.dy - headRadius * 0.18;
-      final eyeDx = headRadius * 0.36;
-      final eyeColor = complete
-          ? const Color(0xFFFFD54A)
-          : const Color(0xFFFF4A2F);
-      if (earned) {
-        final glowPaint = ui.Paint()
-          ..color = eyeColor.withValues(alpha: (0.20 * glowStrength).clamp(0.0, 0.55))
-          ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, cell.width * 0.16);
-        canvas.drawCircle(ui.Offset(headCenter.dx - eyeDx, eyeY), headRadius * 0.23, glowPaint);
-        canvas.drawCircle(ui.Offset(headCenter.dx + eyeDx, eyeY), headRadius * 0.23, glowPaint);
+      if (i < _zombieHeadImages.length) {
+        final artRect = ui.Rect.fromLTWH(
+          cell.left + cell.width * 0.06,
+          cell.top + cell.height * 0.04,
+          cell.width * 0.88,
+          cell.height * 0.76,
+        );
+        _drawImageCover(
+          canvas,
+          _zombieHeadImages[i],
+          artRect,
+          opacity: earned ? 1.0 : 0.26,
+        );
       }
-      final eyePaint = ui.Paint()..color = earned ? eyeColor : const Color(0xFF2B2A27);
-      canvas.drawCircle(ui.Offset(headCenter.dx - eyeDx, eyeY), headRadius * 0.10, eyePaint);
-      canvas.drawCircle(ui.Offset(headCenter.dx + eyeDx, eyeY), headRadius * 0.10, eyePaint);
 
-      final flameBase = ui.Offset(cell.center.dx, cell.bottom - cell.height * 0.24);
-      final flameH = cell.height * (earned ? (0.20 + 0.035 * flicker) * flare : 0.075);
-      final flameW = cell.width * (earned ? 0.22 : 0.10);
+      if (earned) {
+        final eyeGlow = ui.Paint()
+          ..color = const Color(0xFFFF3A22)
+              .withValues(alpha: flaring ? 0.68 : 0.28 * flicker)
+          ..maskFilter =
+              ui.MaskFilter.blur(ui.BlurStyle.normal, cell.width * 0.12);
+        canvas.drawCircle(
+          ui.Offset(cell.center.dx - cell.width * 0.11, cell.top + cell.height * 0.35),
+          cell.width * 0.055,
+          eyeGlow,
+        );
+        canvas.drawCircle(
+          ui.Offset(cell.center.dx + cell.width * 0.11, cell.top + cell.height * 0.35),
+          cell.width * 0.055,
+          eyeGlow,
+        );
+      }
+
+      final flameBase = ui.Offset(cell.center.dx, cell.bottom - cell.height * 0.10);
+      final flameH = cell.height * (earned ? 0.18 + 0.03 * flicker : 0.045);
+      final flameW = cell.width * (earned ? 0.16 : 0.07);
       final flame = ui.Path()
         ..moveTo(flameBase.dx, flameBase.dy - flameH)
-        ..cubicTo(
-          flameBase.dx + flameW * 0.9,
-          flameBase.dy - flameH * 0.56,
-          flameBase.dx + flameW * 0.65,
-          flameBase.dy,
+        ..quadraticBezierTo(
+          flameBase.dx + flameW,
+          flameBase.dy - flameH * 0.45,
           flameBase.dx,
           flameBase.dy,
         )
-        ..cubicTo(
-          flameBase.dx - flameW * 0.65,
-          flameBase.dy,
-          flameBase.dx - flameW * 0.9,
-          flameBase.dy - flameH * 0.56,
+        ..quadraticBezierTo(
+          flameBase.dx - flameW,
+          flameBase.dy - flameH * 0.45,
           flameBase.dx,
           flameBase.dy - flameH,
         )
         ..close();
       canvas.drawPath(
         flame,
-        ui.Paint()..color = earned ? const Color(0xFFFF7A18) : const Color(0xFF432312),
+        ui.Paint()
+          ..color = earned
+              ? const Color(0xFFFF781B)
+              : const Color(0xFF4A2412),
       );
-      if (earned) {
-        canvas.drawCircle(
-          flameBase.translate(0, -flameH * 0.35),
-          flameW * 0.26,
-          ui.Paint()..color = const Color(0xFFFFD65A),
-        );
-      }
 
       _paintText(
         canvas,
         (i + 1).toString(),
-        ui.Offset(cell.center.dx, cell.bottom - cell.height * 0.06),
-        fontSize: cell.width * 0.19,
-        color: earned ? const Color(0xFFFFD16A) : const Color(0xFF7A6A55),
-        weight: FontWeight.w800,
+        ui.Offset(cell.center.dx, cell.bottom - cell.height * 0.03),
+        fontSize: cell.width * 0.18,
+        color: earned ? const Color(0xFFFFD366) : const Color(0xFF755B42),
+        weight: FontWeight.w900,
         centered: true,
+      );
+
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(cell, const ui.Radius.circular(5)),
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = flaring ? 2.0 : 1.0
+          ..color = earned
+              ? const Color(0xFFC2893D)
+              : const Color(0xFF3B2A1D),
       );
     }
   }
@@ -1192,10 +1148,20 @@ class RedBlackPokerGame extends FlameGame {
     final left = rect.left;
     final width = rect.width;
     final height = rect.height;
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(8)),
-      ui.Paint()..color = const Color(0xDD08090B),
-    );
+
+    if (_paytableArt != null) {
+      _drawImageCover(canvas, _paytableArt!, rect, opacity: 0.96);
+      final inner = rect.deflate(rect.width * 0.055);
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(inner, const ui.Radius.circular(5)),
+        ui.Paint()..color = const Color(0xDDE0C58F),
+      );
+    } else {
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(8)),
+        ui.Paint()..color = const Color(0xDD08090B),
+      );
+    }
 
     const rows = <HandRank>[
       HandRank.fiveOfAKind,
@@ -1221,8 +1187,8 @@ class RedBlackPokerGame extends FlameGame {
         rows[i].label,
         ui.Offset(x, y),
         fontSize: size.x * 0.026,
-        color: const Color(0xFFE8D19C),
-        weight: FontWeight.w700,
+        color: const Color(0xFF2A160D),
+        weight: FontWeight.w800,
       );
 
       _paintText(
@@ -1230,8 +1196,8 @@ class RedBlackPokerGame extends FlameGame {
         (rows[i].basePayout * round.bet).toString(),
         ui.Offset(x + width * 0.35, y),
         fontSize: size.x * 0.026,
-        color: const Color(0xFFFF4A43),
-        weight: FontWeight.w800,
+        color: const Color(0xFFB31F16),
+        weight: FontWeight.w900,
         centered: true,
       );
     }
@@ -1241,7 +1207,7 @@ class RedBlackPokerGame extends FlameGame {
       'HIGH PAIR J / Q / K / A  →  ZOMBIE HEAD',
       ui.Offset(size.x * 0.5, top + height - size.y * 0.007),
       fontSize: size.x * 0.024,
-      color: const Color(0xFFB6DB7B),
+      color: const Color(0xFF4D2C13),
       weight: FontWeight.w700,
       centered: true,
     );
@@ -1363,8 +1329,8 @@ class RedBlackPokerGame extends FlameGame {
         labels[i],
         ui.Offset(rect.center.dx, rect.top + panelHeight * 0.28),
         fontSize: size.x * 0.024,
-        color: const Color(0xFFE8D19C),
-        weight: FontWeight.w700,
+        color: const Color(0xFF2A160D),
+        weight: FontWeight.w800,
         centered: true,
       );
       _paintText(
@@ -1566,6 +1532,61 @@ class RedBlackPokerGame extends FlameGame {
     );
   }
 
+  void _drawImageCover(
+    ui.Canvas canvas,
+    ui.Image image,
+    ui.Rect dst, {
+    double opacity = 1.0,
+  }) {
+    final sw = image.width.toDouble();
+    final sh = image.height.toDouble();
+    final srcAspect = sw / sh;
+    final dstAspect = dst.width / dst.height;
+    late ui.Rect src;
+    if (srcAspect > dstAspect) {
+      final cropW = sh * dstAspect;
+      src = ui.Rect.fromLTWH((sw - cropW) / 2, 0, cropW, sh);
+    } else {
+      final cropH = sw / dstAspect;
+      src = ui.Rect.fromLTWH(0, (sh - cropH) / 2, sw, cropH);
+    }
+    canvas.drawImageRect(
+      image,
+      src,
+      dst,
+      ui.Paint()
+        ..filterQuality = ui.FilterQuality.high
+        ..color = Colors.white.withValues(alpha: opacity),
+    );
+  }
+
+  void _drawImageContain(
+    ui.Canvas canvas,
+    ui.Image image,
+    ui.Rect dst, {
+    double opacity = 1.0,
+  }) {
+    final sw = image.width.toDouble();
+    final sh = image.height.toDouble();
+    final scale = math.min(dst.width / sw, dst.height / sh);
+    final w = sw * scale;
+    final h = sh * scale;
+    final fitted = ui.Rect.fromLTWH(
+      dst.center.dx - w / 2,
+      dst.center.dy - h / 2,
+      w,
+      h,
+    );
+    canvas.drawImageRect(
+      image,
+      ui.Rect.fromLTWH(0, 0, sw, sh),
+      fitted,
+      ui.Paint()
+        ..filterQuality = ui.FilterQuality.high
+        ..color = Colors.white.withValues(alpha: opacity),
+    );
+  }
+
   void _paintText(
     ui.Canvas canvas,
     String text,
@@ -1606,13 +1627,16 @@ class _CabinetGeometry {
   double get gap => (w * 0.012).clamp(4.0, 12.0);
   double get buttonGap => w * 0.014;
 
+  ui.Rect get titleBanner =>
+      ui.Rect.fromLTWH(w * 0.025, h * 0.012, w * 0.95, h * 0.19);
+
   ui.Rect get zombieFrame =>
-      ui.Rect.fromLTWH(w * 0.025, h * 0.055, w * 0.95, h * 0.115);
+      ui.Rect.fromLTWH(w * 0.035, h * 0.205, w * 0.93, h * 0.095);
 
   ui.Rect get payTable =>
-      ui.Rect.fromLTWH(w * 0.06, h * 0.186, w * 0.88, h * 0.16);
+      ui.Rect.fromLTWH(w * 0.055, h * 0.307, w * 0.89, h * 0.145);
 
-  double get cardTop => payTable.bottom + h * 0.025;
+  double get cardTop => payTable.bottom + h * 0.018;
   double get cardWidth => ((w * 0.94) - gap * 4) / 5;
   double get cardHeight => cardWidth * 1.42;
 
@@ -1647,8 +1671,8 @@ class _CabinetGeometry {
     );
   }
 
-  double get controlsTop => statusTop + h * 0.083;
-  double get buttonHeight => h * 0.054;
+  double get controlsTop => statusTop + h * 0.072;
+  double get buttonHeight => h * 0.052;
   double get smallButtonWidth =>
       (w - side * 2 - buttonGap * 3) / 4;
 
@@ -1710,7 +1734,10 @@ class _CabinetGeometry {
       ui.Rect.fromLTWH(w * 0.885, h * 0.012, w * 0.08, h * 0.04);
 
   ui.Rect get controlPanel =>
-      ui.Rect.fromLTWH(w * 0.025, statusTop + h * 0.071, w * 0.95, h * 0.175);
+      ui.Rect.fromLTWH(w * 0.025, statusTop + h * 0.064, w * 0.95, h * 0.172);
+
+  ui.Rect get bottomArt =>
+      ui.Rect.fromLTWH(w * 0.035, h * 0.805, w * 0.93, h * 0.13);
 
   ui.Rect get walletStrip => ui.Rect.fromLTWH(
         controlPanel.left + w * 0.03,
@@ -1762,6 +1789,7 @@ class _CardView extends PositionComponent with TapCallbacks {
   final int index;
   final VoidCallback onTap;
   ui.Image? cardImage;
+  ui.Image? backImage;
   bool held = false;
   bool winning = false;
   bool enabled = false;
@@ -1789,6 +1817,18 @@ class _CardView extends PositionComponent with TapCallbacks {
           0,
           cardImage!.width.toDouble(),
           cardImage!.height.toDouble(),
+        ),
+        rect,
+        ui.Paint()..filterQuality = ui.FilterQuality.high,
+      );
+    } else if (backImage != null) {
+      canvas.drawImageRect(
+        backImage!,
+        ui.Rect.fromLTWH(
+          0,
+          0,
+          backImage!.width.toDouble(),
+          backImage!.height.toDouble(),
         ),
         rect,
         ui.Paint()..filterQuality = ui.FilterQuality.high,
