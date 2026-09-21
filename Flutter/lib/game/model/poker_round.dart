@@ -17,15 +17,18 @@ class PokerRound {
     Deck? deck,
     HandEvaluator? evaluator,
     this.startingCredits = 10,
+    this.startingWallet = 4412,
     this.bonusTarget = 10,
     this.bonusPrize = 25,
   })  : _deck = deck ?? Deck(),
         _evaluator = evaluator ?? const HandEvaluator(),
-        credits = startingCredits;
+        credits = startingCredits,
+        wallet = startingWallet;
 
   final Deck _deck;
   final HandEvaluator _evaluator;
   final int startingCredits;
+  final int startingWallet;
   final int bonusTarget;
   final int bonusPrize;
 
@@ -35,12 +38,21 @@ class PokerRound {
   RoundPhase phase = RoundPhase.idle;
   HandRank result = HandRank.none;
   int credits;
+  int wallet;
   int bet = 1;
   int pendingWin = 0;
   int bonusProgress = 0;
 
   int get lastWin => pendingWin;
+  int get bank => wallet + credits + pendingWin;
   bool get bonusReady => bonusProgress >= bonusTarget;
+
+  bool get canAdjustMoney =>
+      phase == RoundPhase.idle || phase == RoundPhase.result;
+
+  bool get canInsertCoins => canAdjustMoney && wallet > 0;
+
+  bool get canCashOut => canAdjustMoney && credits > 0;
 
   bool get canStartHand =>
       (phase == RoundPhase.idle || phase == RoundPhase.result) &&
@@ -56,7 +68,23 @@ class PokerRound {
 
   void changeBet(int delta) {
     if (phase != RoundPhase.idle && phase != RoundPhase.result) return;
-    bet = (bet + delta).clamp(1, 100);
+    bet = (bet + delta).clamp(1, 5);
+  }
+
+  int insertCoins([int amount = 10]) {
+    if (!canInsertCoins || amount <= 0) return 0;
+    final transfer = amount > wallet ? wallet : amount;
+    wallet -= transfer;
+    credits += transfer;
+    return transfer;
+  }
+
+  int cashOut() {
+    if (!canCashOut) return 0;
+    final amount = credits;
+    wallet += amount;
+    credits = 0;
+    return amount;
   }
 
   void startHand() {
