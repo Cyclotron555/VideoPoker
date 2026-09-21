@@ -89,8 +89,14 @@ class AutoHoldAdvisor {
           ranks.add(card.rank);
         }
       }
-      if (ranks.length + jokers == 5 && _canCompleteStraight(ranks, jokers, 5)) {
-        return List<bool>.filled(5, true);
+      if (ranks.length + jokers == 5) {
+        final normalized = ranks.map((r) => r == 1 ? 14 : r).toList();
+        final high = jokers == 0
+            ? _naturalConsecutiveHigh(normalized)
+            : _jokerConsecutiveHigh(normalized, 5);
+        if (high != null) {
+          return List<bool>.filled(5, true);
+        }
       }
     }
     return null;
