@@ -45,6 +45,7 @@ class RedBlackPokerGame extends FlameGame {
   late final _GameButton _betMaxButton;
   late final _GameButton _cashOutButton;
   late final _GameButton _insertCoinsButton;
+  late final _GameButton _refillWalletButton;
   late final _GameButton _doubleUpButton;
   late final _GameButton _collectButton;
   late final _GameButton _redButton;
@@ -136,6 +137,14 @@ class RedBlackPokerGame extends FlameGame {
         _syncView();
       },
     );
+    _refillWalletButton = _GameButton(
+      label: 'REFILL WALLET',
+      accent: const Color(0xFF7A244F),
+      onPressed: () {
+        round.refillWallet();
+        _syncView();
+      },
+    );
     _doubleUpButton = _GameButton(
       label: 'DOUBLE UP',
       accent: const Color(0xFF6E1A91),
@@ -170,6 +179,7 @@ class RedBlackPokerGame extends FlameGame {
       _betMaxButton,
       _cashOutButton,
       _insertCoinsButton,
+      _refillWalletButton,
       _doubleUpButton,
       _collectButton,
       _redButton,
@@ -248,6 +258,9 @@ class RedBlackPokerGame extends FlameGame {
     _insertCoinsButton
       ..position = Vector2(sidePad + lowerButtonWidth + gapButtons, lowerTop)
       ..size = Vector2(lowerButtonWidth, buttonHeight);
+    _refillWalletButton
+      ..position = Vector2(sidePad, lowerTop)
+      ..size = Vector2(w - sidePad * 2, buttonHeight);
 
     final decisionButtonWidth = w * 0.30;
     final decisionGap = w * 0.025;
@@ -285,6 +298,7 @@ class RedBlackPokerGame extends FlameGame {
     _hideButton(_betMaxButton);
     _hideButton(_cashOutButton);
     _hideButton(_insertCoinsButton);
+    _hideButton(_refillWalletButton);
     _hideButton(_doubleUpButton);
     _hideButton(_collectButton);
 
@@ -504,11 +518,13 @@ class RedBlackPokerGame extends FlameGame {
     _betMaxButton.enabled = moneyControls && round.bet < 5;
     _cashOutButton.enabled = !_isAnimatingCards && round.canCashOut;
     _insertCoinsButton.enabled = !_isAnimatingCards && round.canInsertCoins;
+    _refillWalletButton.enabled = !_isAnimatingCards && round.canRefillWallet;
     _betDownButton.lit = _betDownButton.enabled;
     _betUpButton.lit = _betUpButton.enabled;
     _betMaxButton.lit = _betMaxButton.enabled;
     _cashOutButton.lit = _cashOutButton.enabled;
     _insertCoinsButton.lit = _insertCoinsButton.enabled;
+    _refillWalletButton.lit = _refillWalletButton.enabled;
 
     final decision = round.phase == RoundPhase.winDecision && !_isAnimatingCards;
     _doubleUpButton.enabled = decision;
@@ -523,6 +539,12 @@ class RedBlackPokerGame extends FlameGame {
     _lastBonusProgress = round.bonusProgress;
 
     _layoutMainGame();
+    if (round.canRefillWallet && !decision) {
+      _hideButton(_cashOutButton);
+      _hideButton(_insertCoinsButton);
+    } else {
+      _hideButton(_refillWalletButton);
+    }
     if (!decision) {
       _hideButton(_doubleUpButton);
       _hideButton(_collectButton);
@@ -533,6 +555,7 @@ class RedBlackPokerGame extends FlameGame {
       _hideButton(_betMaxButton);
       _hideButton(_cashOutButton);
       _hideButton(_insertCoinsButton);
+      _hideButton(_refillWalletButton);
     }
   }
 
