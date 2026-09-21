@@ -419,11 +419,15 @@ class RedBlackPokerGame extends FlameGame {
 
     for (var i = 0; i < _cardViews.length; i++) {
       final hasCard = i < round.cards.length;
+      final winningMask = _winningCardMask();
       _cardViews[i]
         ..cardImage = hasCard && _revealed[i]
             ? _cardImages[round.cards[i].assetId]
             : null
-        ..held = round.held[i] && _revealed[i]
+        ..held = round.phase == RoundPhase.chooseHolds &&
+            round.held[i] &&
+            _revealed[i]
+        ..winning = i < winningMask.length && winningMask[i] && _revealed[i]
         ..enabled = round.canDrawReplacement && !_isAnimatingCards;
     }
 
@@ -442,6 +446,72 @@ class RedBlackPokerGame extends FlameGame {
       _hideButton(_collectButton);
     } else {
       _layoutMainGame();
+    }
+  }
+
+  List<bool> _winningCardMask() {
+    final mask = List<bool>.filled(5, false);
+    if (round.cards.length != 5 || round.pendingWin <= 0) return mask;
+
+    final cards = round.cards;
+    final jokerIndexes = <int>[
+      for (var i = 0; i < cards.length; i++)
+        if (cards[i].isJoker) i,
+    ];
+
+    switch (round.result) {
+      case HandRank.fiveOfAKind:
+      case HandRank.royalFlush:
+      case HandRank.straightFlush:
+      case HandRank.fullHouse:
+      case HandRank.flush:
+      case HandRank.straight:
+        return List<bool>.filled(5, true);
+
+      case HandRank.fourOfAKind:
+      case HandRank.threeOfAKind:
+        final target = round.result == HandRank.fourOfAKind ? 4 : 3;
+        final byRank = <int, List<int>>{};
+        for (var i = 0; i < cards.length; i++) {
+          if (cards[i].isJoker) continue;
+          byRank.putIfAbsent(cards[i].rank, () => <int>[]).add(i);
+        }
+
+        List<int>? best;
+        for (final indexes in byRank.values) {
+          final combined = <int>[...indexes, ...jokerIndexes];
+          if (combined.length >= target &&
+              (best == null || combined.length > best.length)) {
+            best = combined;
+          }
+        }
+
+        if (best != null) {
+          for (final i in best.take(target)) {
+            mask[i] = true;
+          }
+        }
+        return mask;
+
+      case HandRank.twoPair:
+        final byRank = <int, List<int>>{};
+        for (var i = 0; i < cards.length; i++) {
+          if (cards[i].isJoker) continue;
+          byRank.putIfAbsent(cards[i].rank, () => <int>[]).add(i);
+        }
+        final pairs = byRank.values.where((v) => v.length == 2).take(2);
+        for (final pair in pairs) {
+          for (final i in pair) {
+            mask[i] = true;
+          }
+        }
+        for (final i in jokerIndexes) {
+          if (mask.where((v) => v).length < 4) mask[i] = true;
+        }
+        return mask;
+
+      case HandRank.none:
+        return mask;
     }
   }
 
@@ -835,6 +905,7 @@ class _CardView extends PositionComponent with TapCallbacks {
   final VoidCallback onTap;
   ui.Image? cardImage;
   bool held = false;
+  bool winning = false;
   bool enabled = false;
 
   @override
@@ -892,6 +963,27 @@ class _CardView extends PositionComponent with TapCallbacks {
             color: const Color(0xFFFFC85A),
             fontWeight: FontWeight.w900,
             fontSize: size.x * 0.16,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: size.x);
+      painter.paint(
+        canvas,
+        ui.Offset((size.x - painter.width) / 2, size.y * 0.84 - painter.height / 2),
+      );
+    }
+
+    if (winning) {
+      final winRect = ui.Rect.fromLTWH(0, size.y * 0.79, size.x, size.y * 0.21);
+      canvas.drawRect(winRect, ui.Paint()..color = const Color(0xE80B0B0D));
+      final painter = TextPainter(
+        text: TextSpan(
+          text: 'WIN',
+          style: TextStyle(
+            color: const Color(0xFFFF4D4D),
+            fontWeight: FontWeight.w900,
+            fontSize: size.x * 0.17,
           ),
         ),
         textAlign: TextAlign.center,
