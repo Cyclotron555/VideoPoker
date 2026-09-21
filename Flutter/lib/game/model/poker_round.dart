@@ -54,6 +54,8 @@ class PokerRound {
 
   bool get canCashOut => canAdjustMoney && credits > 0;
 
+  bool get canRefillWallet => canAdjustMoney && wallet == 0;
+
   bool get canStartHand =>
       (phase == RoundPhase.idle || phase == RoundPhase.result) &&
       credits >= bet;
@@ -85,6 +87,12 @@ class PokerRound {
     wallet += amount;
     credits = 0;
     return amount;
+  }
+
+  int refillWallet() {
+    if (!canRefillWallet) return 0;
+    wallet = startingWallet;
+    return wallet;
   }
 
   void startHand() {
