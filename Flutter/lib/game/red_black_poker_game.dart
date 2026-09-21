@@ -801,25 +801,71 @@ class RedBlackPokerGame extends FlameGame {
     );
 
     const multipliers = <String>['2X', '4X', '8X', '16X', '32X', '64X'];
-    for (var i = 0; i < multipliers.length; i++) {
-      final active = i < session.roundsWon;
-      final x = size.x * (0.12 + i * 0.152);
+
+    final historyTop = size.y * 0.305;
+    final historyGap = size.x * 0.012;
+    final historyCardW = (size.x * 0.90 - historyGap * 5) / 6;
+    final historyCardH = historyCardW * 1.42;
+    final historyStartX = size.x * 0.05;
+
+    for (var i = 0; i < 6; i++) {
+      final x = historyStartX + i * (historyCardW + historyGap);
+      final rect = ui.Rect.fromLTWH(
+        x,
+        historyTop + size.y * 0.028,
+        historyCardW,
+        historyCardH,
+      );
+
       _paintText(
         canvas,
         multipliers[i],
-        ui.Offset(x, size.y * 0.315),
-        fontSize: size.x * 0.034,
-        color: active ? const Color(0xFFFF4D4D) : const Color(0xFF8B7D72),
+        ui.Offset(rect.center.dx, historyTop),
+        fontSize: size.x * 0.032,
+        color: i < session.roundsWon
+            ? const Color(0xFFFF4D4D)
+            : const Color(0xFF8B7D72),
         weight: FontWeight.w800,
         centered: true,
       );
+
+      if (i < session.history.length &&
+          session.history[i].correct &&
+          _cardImages[session.history[i].cardId] != null) {
+        final image = _cardImages[session.history[i].cardId]!;
+        canvas.drawImageRect(
+          image,
+          ui.Rect.fromLTWH(
+            0,
+            0,
+            image.width.toDouble(),
+            image.height.toDouble(),
+          ),
+          rect,
+          ui.Paint()..filterQuality = ui.FilterQuality.high,
+        );
+      } else {
+        canvas.drawRRect(
+          ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(7)),
+          ui.Paint()..color = const Color(0xFF111216),
+        );
+        canvas.drawRRect(
+          ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(7)),
+          ui.Paint()
+            ..style = ui.PaintingStyle.stroke
+            ..strokeWidth = 1.5
+            ..color = i < session.roundsWon
+                ? const Color(0xFFB28347)
+                : const Color(0xFF4D4640),
+        );
+      }
     }
 
-    final cardW = size.x * 0.31;
+    final cardW = size.x * 0.25;
     final cardH = cardW * 1.42;
     final cardRect = ui.Rect.fromLTWH(
       size.x * 0.5 - cardW * 0.5,
-      size.y * 0.38,
+      size.y * 0.50,
       cardW,
       cardH,
     );
@@ -829,7 +875,12 @@ class RedBlackPokerGame extends FlameGame {
       final image = _cardImages[id]!;
       canvas.drawImageRect(
         image,
-        ui.Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+        ui.Rect.fromLTWH(
+          0,
+          0,
+          image.width.toDouble(),
+          image.height.toDouble(),
+        ),
         cardRect,
         ui.Paint()..filterQuality = ui.FilterQuality.high,
       );
@@ -849,7 +900,7 @@ class RedBlackPokerGame extends FlameGame {
         canvas,
         '?',
         cardRect.center,
-        fontSize: size.x * 0.22,
+        fontSize: size.x * 0.18,
         color: const Color(0xFFD9B36B),
         weight: FontWeight.w900,
         centered: true,
@@ -859,8 +910,8 @@ class RedBlackPokerGame extends FlameGame {
     _paintText(
       canvas,
       _redBlackMessage,
-      ui.Offset(size.x * 0.5, size.y * 0.64),
-      fontSize: size.x * 0.047,
+      ui.Offset(size.x * 0.5, size.y * 0.665),
+      fontSize: size.x * 0.045,
       color: const Color(0xFFF0D39A),
       weight: FontWeight.w900,
       centered: true,
