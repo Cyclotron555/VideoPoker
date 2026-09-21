@@ -65,6 +65,8 @@ class RedBlackPokerGame extends FlameGame {
   late final _GameButton _backPrevButton;
   late final _GameButton _backNextButton;
 
+  _CabinetGeometry get _geometry => _CabinetGeometry(size.x, size.y);
+
   @override
   Color backgroundColor() => const Color(0xFF07090D);
 
@@ -281,76 +283,31 @@ class RedBlackPokerGame extends FlameGame {
   }
 
   void _layoutMainGame() {
-    final w = size.x;
-    final h = size.y;
-    final cabinetTop = h * 0.055;
-    final cabinetHeight = h * 0.115;
-    final payTop = cabinetTop + cabinetHeight + h * 0.016;
-    final payHeight = h * 0.16;
-    final cardTop = payTop + payHeight + h * 0.025;
-
-    final gap = (w * 0.012).clamp(4.0, 12.0);
-    final cardWidth = ((w * 0.94) - gap * 4) / 5;
-    final cardHeight = cardWidth * 1.42;
-    final total = cardWidth * 5 + gap * 4;
-    final startX = (w - total) / 2;
+    final g = _geometry;
 
     for (var i = 0; i < _cardViews.length; i++) {
+      final rect = g.cardRects[i];
       _cardViews[i]
-        ..size = Vector2(cardWidth, cardHeight)
-        ..position = Vector2(startX + i * (cardWidth + gap), cardTop);
+        ..size = Vector2(rect.width, rect.height)
+        ..position = Vector2(rect.left, rect.top);
     }
 
-    final statusTop = cardTop + cardHeight + h * 0.022;
-    final controlsTop = statusTop + h * 0.083;
-    final sidePad = w * 0.04;
-    final gapButtons = w * 0.014;
-    final buttonHeight = h * 0.054;
-    final smallButtonWidth = (w - sidePad * 2 - gapButtons * 3) / 4;
+    void place(_GameButton button, ui.Rect rect) {
+      button
+        ..position = Vector2(rect.left, rect.top)
+        ..size = Vector2(rect.width, rect.height);
+    }
 
-    _betDownButton
-      ..position = Vector2(sidePad, controlsTop)
-      ..size = Vector2(smallButtonWidth, buttonHeight);
-    _betUpButton
-      ..position = Vector2(sidePad + smallButtonWidth + gapButtons, controlsTop)
-      ..size = Vector2(smallButtonWidth, buttonHeight);
-    _betMaxButton
-      ..position = Vector2(sidePad + (smallButtonWidth + gapButtons) * 2, controlsTop)
-      ..size = Vector2(smallButtonWidth, buttonHeight);
-    _mainDrawButton
-      ..position = Vector2(sidePad + (smallButtonWidth + gapButtons) * 3, controlsTop)
-      ..size = Vector2(smallButtonWidth, buttonHeight);
-
-    final lowerTop = controlsTop + buttonHeight + h * 0.012;
-    final lowerButtonWidth = (w - sidePad * 2 - gapButtons) / 2;
-    _cashOutButton
-      ..position = Vector2(sidePad, lowerTop)
-      ..size = Vector2(lowerButtonWidth, buttonHeight);
-    _insertCoinsButton
-      ..position = Vector2(sidePad + lowerButtonWidth + gapButtons, lowerTop)
-      ..size = Vector2(lowerButtonWidth, buttonHeight);
-    _refillWalletButton
-      ..position = Vector2(sidePad, lowerTop)
-      ..size = Vector2(w - sidePad * 2, buttonHeight);
-
-    final decisionButtonWidth = w * 0.30;
-    final decisionGap = w * 0.025;
-    final decisionStart =
-        w * 0.5 - (decisionButtonWidth * 2 + decisionGap) * 0.5;
-
-    _doubleUpButton
-      ..position = Vector2(decisionStart, controlsTop)
-      ..size = Vector2(decisionButtonWidth, buttonHeight);
-    _collectButton
-      ..position = Vector2(
-        decisionStart + decisionButtonWidth + decisionGap,
-        controlsTop,
-      )
-      ..size = Vector2(decisionButtonWidth, buttonHeight);
-
-    _settingsButton
-      ..position = Vector2(w * 0.885, h * 0.012)
-      ..size = Vector2(w * 0.08, h * 0.04);
+    place(_betDownButton, g.betDownButton);
+    place(_betUpButton, g.betUpButton);
+    place(_betMaxButton, g.betMaxButton);
+    place(_mainDrawButton, g.mainButton);
+    place(_cashOutButton, g.cashOutButton);
+    place(_insertCoinsButton, g.insertCoinsButton);
+    place(_refillWalletButton, g.refillWalletButton);
+    place(_doubleUpButton, g.doubleUpButton);
+    place(_collectButton, g.collectButton);
+    place(_settingsButton, g.settingsButton);
 
     _hideButton(_redButton);
     _hideButton(_blackButton);
@@ -363,8 +320,7 @@ class RedBlackPokerGame extends FlameGame {
   }
 
   void _layoutControlPanel() {
-    final w = size.x;
-    final h = size.y;
+    final g = _geometry;
 
     for (final card in _cardViews) {
       card
@@ -391,21 +347,17 @@ class RedBlackPokerGame extends FlameGame {
       _hideButton(button);
     }
 
-    _panelCloseButton
-      ..position = Vector2(w * 0.86, h * 0.08)
-      ..size = Vector2(w * 0.09, h * 0.05);
-    _themePrevButton
-      ..position = Vector2(w * 0.10, h * 0.25)
-      ..size = Vector2(w * 0.11, h * 0.055);
-    _themeNextButton
-      ..position = Vector2(w * 0.79, h * 0.25)
-      ..size = Vector2(w * 0.11, h * 0.055);
-    _backPrevButton
-      ..position = Vector2(w * 0.10, h * 0.39)
-      ..size = Vector2(w * 0.11, h * 0.055);
-    _backNextButton
-      ..position = Vector2(w * 0.79, h * 0.39)
-      ..size = Vector2(w * 0.11, h * 0.055);
+    void place(_GameButton button, ui.Rect rect) {
+      button
+        ..position = Vector2(rect.left, rect.top)
+        ..size = Vector2(rect.width, rect.height);
+    }
+
+    place(_panelCloseButton, g.panelCloseButton);
+    place(_themePrevButton, g.themePrevButton);
+    place(_themeNextButton, g.themeNextButton);
+    place(_backPrevButton, g.backPrevButton);
+    place(_backNextButton, g.backNextButton);
   }
 
   void _layoutRedBlack() {
@@ -823,12 +775,8 @@ class RedBlackPokerGame extends FlameGame {
     final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
     canvas.drawRect(rect, ui.Paint()..color = const Color(0xFF05070B));
 
-    final panel = ui.Rect.fromLTWH(
-      size.x * 0.05,
-      size.y * 0.06,
-      size.x * 0.90,
-      size.y * 0.84,
-    );
+    final g = _geometry;
+    final panel = g.settingsPanel;
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(panel, const ui.Radius.circular(18)),
       ui.Paint()..color = const Color(0xFF102235),
@@ -844,7 +792,7 @@ class RedBlackPokerGame extends FlameGame {
     _paintText(
       canvas,
       'CONTROL PANEL',
-      ui.Offset(size.x * 0.5, size.y * 0.12),
+      g.settingsTitleCenter,
       fontSize: size.x * 0.060,
       color: const Color(0xFFFFD27A),
       weight: FontWeight.w900,
@@ -854,7 +802,7 @@ class RedBlackPokerGame extends FlameGame {
     _paintText(
       canvas,
       'THEME',
-      ui.Offset(size.x * 0.5, size.y * 0.21),
+      g.themeLabelCenter,
       fontSize: size.x * 0.032,
       color: const Color(0xFFE8D19C),
       weight: FontWeight.w800,
@@ -863,7 +811,7 @@ class RedBlackPokerGame extends FlameGame {
     _paintText(
       canvas,
       _themeName,
-      ui.Offset(size.x * 0.5, size.y * 0.278),
+      g.themeValueCenter,
       fontSize: size.x * 0.046,
       color: const Color(0xFFFFFFFF),
       weight: FontWeight.w900,
@@ -873,7 +821,7 @@ class RedBlackPokerGame extends FlameGame {
     _paintText(
       canvas,
       'CARD BACK',
-      ui.Offset(size.x * 0.5, size.y * 0.35),
+      g.cardBackLabelCenter,
       fontSize: size.x * 0.032,
       color: const Color(0xFFE8D19C),
       weight: FontWeight.w800,
@@ -882,7 +830,7 @@ class RedBlackPokerGame extends FlameGame {
     _paintText(
       canvas,
       _cardBackName,
-      ui.Offset(size.x * 0.5, size.y * 0.418),
+      g.cardBackValueCenter,
       fontSize: size.x * 0.038,
       color: const Color(0xFFFFFFFF),
       weight: FontWeight.w900,
@@ -892,7 +840,7 @@ class RedBlackPokerGame extends FlameGame {
     _paintText(
       canvas,
       'STATISTICS',
-      ui.Offset(size.x * 0.5, size.y * 0.50),
+      g.statisticsTitleCenter,
       fontSize: size.x * 0.038,
       color: const Color(0xFFFFD27A),
       weight: FontWeight.w900,
@@ -914,8 +862,8 @@ class RedBlackPokerGame extends FlameGame {
       'Red/Black Wins': _redBlackWins,
     };
 
-    final left = size.x * 0.14;
-    var y = size.y * 0.55;
+    final left = g.statisticsLeft;
+    var y = g.statisticsTop;
     for (final entry in stats.entries) {
       _paintText(
         canvas,
@@ -928,13 +876,13 @@ class RedBlackPokerGame extends FlameGame {
       _paintText(
         canvas,
         entry.value.toString(),
-        ui.Offset(size.x * 0.82, y),
+        ui.Offset(g.statisticsValueX, y),
         fontSize: size.x * 0.028,
         color: const Color(0xFFFF6A5E),
         weight: FontWeight.w900,
         centered: true,
       );
-      y += size.y * 0.027;
+      y += g.statisticsRowGap;
     }
   }
 
@@ -964,11 +912,12 @@ class RedBlackPokerGame extends FlameGame {
   }
 
   void _renderZombieCabinet(ui.Canvas canvas) {
-    final top = size.y * 0.055;
-    final height = size.y * 0.115;
-    final left = size.x * 0.025;
-    final width = size.x * 0.95;
-    final frame = ui.Rect.fromLTWH(left, top, width, height);
+    final g = _geometry;
+    final frame = g.zombieFrame;
+    final top = frame.top;
+    final height = frame.height;
+    final left = frame.left;
+    final width = frame.width;
 
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(frame, const ui.Radius.circular(10)),
@@ -1092,12 +1041,12 @@ class RedBlackPokerGame extends FlameGame {
   }
 
   void _renderPayTable(ui.Canvas canvas) {
-    final top = size.y * 0.186;
-    final left = size.x * 0.06;
-    final width = size.x * 0.88;
-    final height = size.y * 0.16;
-
-    final rect = ui.Rect.fromLTWH(left, top, width, height);
+    final g = _geometry;
+    final rect = g.payTable;
+    final top = rect.top;
+    final left = rect.left;
+    final width = rect.width;
+    final height = rect.height;
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(8)),
       ui.Paint()..color = const Color(0xDD08090B),
@@ -1154,16 +1103,8 @@ class RedBlackPokerGame extends FlameGame {
   }
 
   void _renderControlPanel(ui.Canvas canvas) {
-    final cardTop = size.y * 0.371;
-    final gap = (size.x * 0.012).clamp(4.0, 12.0);
-    final cardWidth = ((size.x * 0.94) - gap * 4) / 5;
-    final cardHeight = cardWidth * 1.42;
-    final statusTop = cardTop + cardHeight + size.y * 0.022;
-    final panelTop = statusTop + size.y * 0.071;
-    final panelLeft = size.x * 0.025;
-    final panelWidth = size.x * 0.95;
-    final panelHeight = size.y * 0.175;
-    final panel = ui.Rect.fromLTWH(panelLeft, panelTop, panelWidth, panelHeight);
+    final g = _geometry;
+    final panel = g.controlPanel;
 
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(panel, const ui.Radius.circular(16)),
@@ -1177,13 +1118,7 @@ class RedBlackPokerGame extends FlameGame {
         ..color = const Color(0xFF70451F),
     );
 
-    final walletTop = panel.bottom - size.y * 0.042;
-    final walletRect = ui.Rect.fromLTWH(
-      panel.left + size.x * 0.03,
-      walletTop,
-      panel.width - size.x * 0.06,
-      size.y * 0.034,
-    );
+    final walletRect = g.walletStrip;
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(walletRect, const ui.Radius.circular(7)),
       ui.Paint()..color = const Color(0xD9060709),
@@ -1219,14 +1154,9 @@ class RedBlackPokerGame extends FlameGame {
   }
 
   void _renderStatus(ui.Canvas canvas) {
-    final cardTop = size.y * 0.371;
-    final gap = (size.x * 0.012).clamp(4.0, 12.0);
-    final cardWidth = ((size.x * 0.94) - gap * 4) / 5;
-    final cardHeight = cardWidth * 1.42;
-    final top = cardTop + cardHeight + size.y * 0.022;
-
-    final panelWidth = size.x * 0.29;
-    final panelHeight = size.y * 0.065;
+    final g = _geometry;
+    final top = g.statusTop;
+    final panelHeight = g.statusPanels.first.height;
     final labels = <String>['BET', 'CREDITS', 'WIN'];
     final values = <String>[
       round.bet.toString(),
@@ -1235,8 +1165,7 @@ class RedBlackPokerGame extends FlameGame {
     ];
 
     for (var i = 0; i < 3; i++) {
-      final x = size.x * 0.04 + i * (panelWidth + size.x * 0.025);
-      final rect = ui.Rect.fromLTWH(x, top, panelWidth, panelHeight);
+      final rect = g.statusPanels[i];
       canvas.drawRRect(
         ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(7)),
         ui.Paint()..color = const Color(0xE608090A),
@@ -1283,7 +1212,7 @@ class RedBlackPokerGame extends FlameGame {
     _paintText(
       canvas,
       message,
-      ui.Offset(size.x * 0.5, top - size.y * 0.012),
+      ui.Offset(size.x * 0.5, g.statusMessageY),
       fontSize: size.x * 0.027,
       color: round.phase == RoundPhase.bonusReady
           ? const Color(0xFF9CFF65)
@@ -1485,6 +1414,163 @@ class RedBlackPokerGame extends FlameGame {
         : ui.Offset(position.dx, position.dy - painter.height / 2);
     painter.paint(canvas, offset);
   }
+}
+
+class _CabinetGeometry {
+  _CabinetGeometry(this.w, this.h);
+
+  final double w;
+  final double h;
+
+  double get side => w * 0.04;
+  double get gap => (w * 0.012).clamp(4.0, 12.0);
+  double get buttonGap => w * 0.014;
+
+  ui.Rect get zombieFrame =>
+      ui.Rect.fromLTWH(w * 0.025, h * 0.055, w * 0.95, h * 0.115);
+
+  ui.Rect get payTable =>
+      ui.Rect.fromLTWH(w * 0.06, h * 0.186, w * 0.88, h * 0.16);
+
+  double get cardTop => payTable.bottom + h * 0.025;
+  double get cardWidth => ((w * 0.94) - gap * 4) / 5;
+  double get cardHeight => cardWidth * 1.42;
+
+  List<ui.Rect> get cardRects {
+    final total = cardWidth * 5 + gap * 4;
+    final startX = (w - total) / 2;
+    return List<ui.Rect>.generate(
+      5,
+      (i) => ui.Rect.fromLTWH(
+        startX + i * (cardWidth + gap),
+        cardTop,
+        cardWidth,
+        cardHeight,
+      ),
+    );
+  }
+
+  double get statusTop => cardTop + cardHeight + h * 0.022;
+  double get statusMessageY => statusTop - h * 0.012;
+
+  List<ui.Rect> get statusPanels {
+    final width = w * 0.29;
+    final height = h * 0.065;
+    return List<ui.Rect>.generate(
+      3,
+      (i) => ui.Rect.fromLTWH(
+        w * 0.04 + i * (width + w * 0.025),
+        statusTop,
+        width,
+        height,
+      ),
+    );
+  }
+
+  double get controlsTop => statusTop + h * 0.083;
+  double get buttonHeight => h * 0.054;
+  double get smallButtonWidth =>
+      (w - side * 2 - buttonGap * 3) / 4;
+
+  ui.Rect get betDownButton =>
+      ui.Rect.fromLTWH(side, controlsTop, smallButtonWidth, buttonHeight);
+  ui.Rect get betUpButton => ui.Rect.fromLTWH(
+        side + smallButtonWidth + buttonGap,
+        controlsTop,
+        smallButtonWidth,
+        buttonHeight,
+      );
+  ui.Rect get betMaxButton => ui.Rect.fromLTWH(
+        side + (smallButtonWidth + buttonGap) * 2,
+        controlsTop,
+        smallButtonWidth,
+        buttonHeight,
+      );
+  ui.Rect get mainButton => ui.Rect.fromLTWH(
+        side + (smallButtonWidth + buttonGap) * 3,
+        controlsTop,
+        smallButtonWidth,
+        buttonHeight,
+      );
+
+  double get lowerTop => controlsTop + buttonHeight + h * 0.012;
+  double get lowerButtonWidth =>
+      (w - side * 2 - buttonGap) / 2;
+
+  ui.Rect get cashOutButton =>
+      ui.Rect.fromLTWH(side, lowerTop, lowerButtonWidth, buttonHeight);
+  ui.Rect get insertCoinsButton => ui.Rect.fromLTWH(
+        side + lowerButtonWidth + buttonGap,
+        lowerTop,
+        lowerButtonWidth,
+        buttonHeight,
+      );
+  ui.Rect get refillWalletButton =>
+      ui.Rect.fromLTWH(side, lowerTop, w - side * 2, buttonHeight);
+
+  double get decisionButtonWidth => w * 0.30;
+  double get decisionGap => w * 0.025;
+  double get decisionStart =>
+      w * 0.5 - (decisionButtonWidth * 2 + decisionGap) * 0.5;
+
+  ui.Rect get doubleUpButton => ui.Rect.fromLTWH(
+        decisionStart,
+        controlsTop,
+        decisionButtonWidth,
+        buttonHeight,
+      );
+  ui.Rect get collectButton => ui.Rect.fromLTWH(
+        decisionStart + decisionButtonWidth + decisionGap,
+        controlsTop,
+        decisionButtonWidth,
+        buttonHeight,
+      );
+
+  ui.Rect get settingsButton =>
+      ui.Rect.fromLTWH(w * 0.885, h * 0.012, w * 0.08, h * 0.04);
+
+  ui.Rect get controlPanel =>
+      ui.Rect.fromLTWH(w * 0.025, statusTop + h * 0.071, w * 0.95, h * 0.175);
+
+  ui.Rect get walletStrip => ui.Rect.fromLTWH(
+        controlPanel.left + w * 0.03,
+        controlPanel.bottom - h * 0.042,
+        controlPanel.width - w * 0.06,
+        h * 0.034,
+      );
+
+  ui.Rect get settingsPanel =>
+      ui.Rect.fromLTWH(w * 0.07, h * 0.07, w * 0.86, h * 0.80);
+
+  ui.Rect get panelCloseButton =>
+      ui.Rect.fromLTWH(settingsPanel.right - w * 0.085, settingsPanel.top + h * 0.018, w * 0.07, h * 0.042);
+
+  ui.Rect get themePrevButton =>
+      ui.Rect.fromLTWH(settingsPanel.left + w * 0.045, h * 0.25, w * 0.10, h * 0.052);
+  ui.Rect get themeNextButton =>
+      ui.Rect.fromLTWH(settingsPanel.right - w * 0.145, h * 0.25, w * 0.10, h * 0.052);
+  ui.Rect get backPrevButton =>
+      ui.Rect.fromLTWH(settingsPanel.left + w * 0.045, h * 0.39, w * 0.10, h * 0.052);
+  ui.Rect get backNextButton =>
+      ui.Rect.fromLTWH(settingsPanel.right - w * 0.145, h * 0.39, w * 0.10, h * 0.052);
+
+  ui.Offset get settingsTitleCenter =>
+      ui.Offset(settingsPanel.center.dx, settingsPanel.top + h * 0.065);
+  ui.Offset get themeLabelCenter =>
+      ui.Offset(settingsPanel.center.dx, h * 0.21);
+  ui.Offset get themeValueCenter =>
+      ui.Offset(settingsPanel.center.dx, h * 0.278);
+  ui.Offset get cardBackLabelCenter =>
+      ui.Offset(settingsPanel.center.dx, h * 0.35);
+  ui.Offset get cardBackValueCenter =>
+      ui.Offset(settingsPanel.center.dx, h * 0.418);
+  ui.Offset get statisticsTitleCenter =>
+      ui.Offset(settingsPanel.center.dx, h * 0.50);
+
+  double get statisticsLeft => settingsPanel.left + w * 0.085;
+  double get statisticsValueX => settingsPanel.right - w * 0.085;
+  double get statisticsTop => h * 0.55;
+  double get statisticsRowGap => h * 0.027;
 }
 
 class _CardView extends PositionComponent with TapCallbacks {
