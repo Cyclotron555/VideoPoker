@@ -175,68 +175,101 @@ class AutoHoldAdvisor {
   }
 
   List<bool>? _bestStraightMask(List<PlayingCard> hand) {
-    // Check every 4-card subset. A subset qualifies if one future card can
-    // complete a 5-card straight; this covers inside gaps such as 5-6-8-9.
-    List<int>? best;
-    int bestHigh = -1;
+    // RBP rule:
+    // - Without a Joker, auto-hold only if at least 3 cards are already
+    //   consecutive after sorting.
+    // - With a Joker, the Joker may only occupy a rank directly inside or
+    //   adjacent to that run. It cannot "jump" over an extra missing rank.
+    //
+    // Prefer the longest valid run, then the higher run.
+    List<int>? bestIndexes;
+    var bestLength = 0;
+    var bestHigh = -1;
 
-    for (var omitted = 0; omitted < 5; omitted++) {
-      final indexes = <int>[for (var i = 0; i < 5; i++) if (i != omitted) i];
-      final ranks = <int>[];
-      var jokers = 0;
+    final jokerIndex = hand.indexWhere((c) => c.isJoker);
+
+    for (var mask = 1; mask < (1 << 5); mask++) {
+      final indexes = <int>[
+        for (var i = 0; i < 5; i++)
+          if ((mask & (1 << i)) != 0) i,
+      ];
+
+      final nonJokerRanks = <int>[];
+      var includesJoker = false;
 
       for (final i in indexes) {
-        if (hand[i].isJoker) {
-          jokers++;
+        final card = hand[i];
+        if (card.isJoker) {
+          includesJoker = true;
         } else {
-          ranks.add(hand[i].rank);
+          nonJokerRanks.add(card.rank == 1 ? 14 : card.rank);
         }
       }
 
-      final high = _bestStraightHigh(ranks, jokers, 4);
-      if (high != null && high > bestHigh) {
+      final cardCount = indexes.length;
+      if (cardCount < 3) continue;
+
+      final high = includesJoker
+          ? _jokerConsecutiveHigh(nonJokerRanks, cardCount)
+          : _naturalConsecutiveHigh(nonJokerRanks);
+
+      if (high == null) continue;
+
+      if (cardCount > bestLength ||
+          (cardCount == bestLength && high > bestHigh)) {
+        bestLength = cardCount;
         bestHigh = high;
-        best = indexes;
+        bestIndexes = indexes;
       }
     }
 
-    // Also recognize a made 5-card straight.
-    final allRanks = <int>[];
-    var allJokers = 0;
-    for (final card in hand) {
-      if (card.isJoker) {
-        allJokers++;
-      } else {
-        allRanks.add(card.rank);
-      }
-    }
-    if (_canCompleteStraight(allRanks, allJokers, 5)) {
-      return List<bool>.filled(5, true);
-    }
+    if (bestIndexes == null) return null;
 
-    if (best == null) return null;
     final mask = List<bool>.filled(5, false);
-    for (final i in best) {
+    for (final i in bestIndexes) {
       mask[i] = true;
     }
     return mask;
   }
 
-  bool _canCompleteStraight(List<int> ranks, int jokers, int cardCount) {
-    return _bestStraightHigh(ranks, jokers, cardCount) != null;
+  int? _naturalConsecutiveHigh(List<int> ranks) {
+    if (ranks.length < 3) return null;
+    final sorted = ranks.toSet().toList()..sort();
+    if (sorted.length != ranks.length) return null;
+
+    var consecutive = true;
+    for (var i = 1; i < sorted.length; i++) {
+      if (sorted[i] != sorted[i - 1] + 1) {
+        consecutive = false;
+        break;
+      }
+    }
+    if (consecutive) return sorted.last;
+
+    // Ace-low run, e.g. A-2-3 or A-2-3-4.
+    final aceLow = sorted.map((r) => r == 14 ? 1 : r).toList()..sort();
+    for (var i = 1; i < aceLow.length; i++) {
+      if (aceLow[i] != aceLow[i - 1] + 1) return null;
+    }
+    return aceLow.last;
   }
 
-  int? _bestStraightHigh(List<int> ranks, int jokers, int cardCount) {
-    final normalized = ranks.map((r) => r == 1 ? 14 : r).toSet();
-    for (var high = 14; high >= 5; high--) {
-      final target = <int>{for (var r = high - 4; r <= high; r++) r};
-      final present = normalized.where(target.contains).length;
-      if (present + jokers >= cardCount) return high;
+  int? _jokerConsecutiveHigh(List<int> ranks, int totalCards) {
+    // The Joker must account for exactly one rank in the final contiguous run.
+    // If the natural cards already require two or more missing ranks, reject it.
+    if (totalCards < 3 || ranks.length != totalCards - 1) return null;
+
+    final normalized = ranks.toSet().toList()..sort();
+    if (normalized.length != ranks.length) return null;
+
+    // Try every legal Joker rank in a standard straight window.
+    for (var jokerRank = 1; jokerRank <= 14; jokerRank++) {
+      final trial = <int>[...normalized, jokerRank];
+
+      final naturalHigh = _naturalConsecutiveHigh(trial);
+      if (naturalHigh != null) return naturalHigh;
     }
 
-    const wheel = <int>{14, 2, 3, 4, 5};
-    final presentWheel = normalized.where(wheel.contains).length;
-    if (presentWheel + jokers >= cardCount) return 5;
     return null;
   }
 
