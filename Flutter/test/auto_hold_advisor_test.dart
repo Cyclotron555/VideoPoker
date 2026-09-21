@@ -21,7 +21,7 @@ void main() {
     expect(d.held, isNot(<bool>[true, true, true, true, false]));
   });
 
-  test('holds a real three-card consecutive run', () {
+  test('does not auto hold only three consecutive cards', () {
     final hand = <PlayingCard>[
       c(7, CardSuit.hearts),
       c(8, CardSuit.clubs),
@@ -31,7 +31,20 @@ void main() {
     ];
 
     final d = advisor.recommend(hand);
-    expect(d.held, <bool>[true, true, true, false, false]);
+    expect(d.held, isNot(<bool>[true, true, true, false, false]));
+  });
+
+  test('holds four consecutive cards', () {
+    final hand = <PlayingCard>[
+      c(7, CardSuit.hearts),
+      c(8, CardSuit.clubs),
+      c(9, CardSuit.spades),
+      c(10, CardSuit.diamonds),
+      c(3, CardSuit.hearts),
+    ];
+
+    final d = advisor.recommend(hand);
+    expect(d.held, <bool>[true, true, true, true, false]);
   });
 
   test('joker may fill exactly one adjacent missing rank', () {
