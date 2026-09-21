@@ -733,7 +733,9 @@ class RedBlackPokerGame extends FlameGame {
     final message = switch (round.phase) {
       RoundPhase.idle => 'PRESS DRAW',
       RoundPhase.chooseHolds => 'SELECT CARDS TO HOLD — PRESS DRAW',
-      RoundPhase.result => 'PRESS DRAW',
+      RoundPhase.result => round.result == HandRank.none
+          ? 'HAND OVER — NO WIN'
+          : 'HAND OVER',
       RoundPhase.winDecision => round.result.label + ' — DOUBLE UP OR COLLECT',
       RoundPhase.doubleUp => 'RED OR BLACK',
       RoundPhase.bonusReady => '10 ZOMBIE HEADS — BONUS!',
