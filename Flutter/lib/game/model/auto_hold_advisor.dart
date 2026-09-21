@@ -213,7 +213,7 @@ class AutoHoldAdvisor {
       }
 
       final cardCount = indexes.length;
-      if (cardCount < 3) continue;
+      if (cardCount < 4) continue;
 
       final high = includesJoker
           ? _jokerConsecutiveHigh(nonJokerRanks, cardCount)
@@ -239,7 +239,7 @@ class AutoHoldAdvisor {
   }
 
   int? _naturalConsecutiveHigh(List<int> ranks) {
-    if (ranks.length < 3) return null;
+    if (ranks.length < 4) return null;
     final sorted = ranks.toSet().toList()..sort();
     if (sorted.length != ranks.length) return null;
 
@@ -263,7 +263,7 @@ class AutoHoldAdvisor {
   int? _jokerConsecutiveHigh(List<int> ranks, int totalCards) {
     // The Joker must account for exactly one rank in the final contiguous run.
     // If the natural cards already require two or more missing ranks, reject it.
-    if (totalCards < 3 || ranks.length != totalCards - 1) return null;
+    if (totalCards < 4 || ranks.length != totalCards - 1) return null;
 
     final normalized = ranks.toSet().toList()..sort();
     if (normalized.length != ranks.length) return null;
