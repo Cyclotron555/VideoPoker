@@ -779,14 +779,53 @@ class RedBlackPokerGame extends FlameGame {
     final panel = g.settingsPanel;
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(panel, const ui.Radius.circular(18)),
-      ui.Paint()..color = const Color(0xFF102235),
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          panel.topCenter,
+          panel.bottomCenter,
+          const <Color>[
+            Color(0xFF18121A),
+            Color(0xFF0A111A),
+            Color(0xFF14090E),
+          ],
+        ),
     );
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(panel, const ui.Radius.circular(18)),
       ui.Paint()
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 2.5
-        ..color = const Color(0xFF8B6334),
+        ..strokeWidth = 4
+        ..color = const Color(0xFF3A2618),
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(panel.deflate(4), const ui.Radius.circular(15)),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..color = const Color(0xFFB37A34),
+    );
+
+    final header = ui.Rect.fromLTWH(
+      panel.left + panel.width * 0.05,
+      panel.top + panel.height * 0.025,
+      panel.width * 0.90,
+      panel.height * 0.11,
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(header, const ui.Radius.circular(12)),
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          header.topCenter,
+          header.bottomCenter,
+          const <Color>[Color(0xFF321112), Color(0xFF14090B)],
+        ),
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(header, const ui.Radius.circular(12)),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        ..color = const Color(0xFF7B4B28),
     );
 
     _paintText(
@@ -887,25 +926,130 @@ class RedBlackPokerGame extends FlameGame {
   }
 
   void _renderBackdrop(ui.Canvas canvas) {
+    final g = _geometry;
     final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
-    final gradient = ui.Gradient.linear(
-      ui.Offset(size.x * 0.5, 0),
-      ui.Offset(size.x * 0.5, size.y),
-      const <Color>[
-        Color(0xFF06101F),
-        Color(0xFF151018),
-        Color(0xFF09090D),
-      ],
-      const <double>[0.0, 0.52, 1.0],
+
+    canvas.drawRect(
+      rect,
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          rect.topCenter,
+          rect.bottomCenter,
+          const <Color>[
+            Color(0xFF03101A),
+            Color(0xFF091321),
+            Color(0xFF180A10),
+            Color(0xFF050305),
+          ],
+          const <double>[0.0, 0.26, 0.62, 1.0],
+        ),
     );
-    canvas.drawRect(rect, ui.Paint()..shader = gradient);
+
+    // Moon glow and haunted skyline.
+    final moonCenter = ui.Offset(size.x * 0.82, size.y * 0.07);
+    canvas.drawCircle(
+      moonCenter,
+      size.x * 0.12,
+      ui.Paint()
+        ..color = const Color(0x225EBFFF)
+        ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.10),
+    );
+    canvas.drawCircle(
+      moonCenter,
+      size.x * 0.065,
+      ui.Paint()..color = const Color(0xFFB6C6D6),
+    );
+
+    final skyline = ui.Path()
+      ..moveTo(0, size.y * 0.20)
+      ..lineTo(size.x * 0.07, size.y * 0.17)
+      ..lineTo(size.x * 0.12, size.y * 0.19)
+      ..lineTo(size.x * 0.16, size.y * 0.13)
+      ..lineTo(size.x * 0.20, size.y * 0.19)
+      ..lineTo(size.x * 0.27, size.y * 0.15)
+      ..lineTo(size.x * 0.32, size.y * 0.19)
+      ..lineTo(size.x * 0.38, size.y * 0.12)
+      ..lineTo(size.x * 0.43, size.y * 0.19)
+      ..lineTo(size.x * 0.50, size.y * 0.14)
+      ..lineTo(size.x * 0.56, size.y * 0.19)
+      ..lineTo(size.x * 0.61, size.y * 0.11)
+      ..lineTo(size.x * 0.66, size.y * 0.19)
+      ..lineTo(size.x * 0.73, size.y * 0.15)
+      ..lineTo(size.x * 0.78, size.y * 0.19)
+      ..lineTo(size.x * 0.84, size.y * 0.12)
+      ..lineTo(size.x * 0.90, size.y * 0.19)
+      ..lineTo(size.x, size.y * 0.15)
+      ..lineTo(size.x, size.y * 0.30)
+      ..lineTo(0, size.y * 0.30)
+      ..close();
+    canvas.drawPath(skyline, ui.Paint()..color = const Color(0xCC030508));
+
+    // Outer gothic rails.
+    final railPaint = ui.Paint()..color = const Color(0xFF261713);
+    canvas.drawRect(ui.Rect.fromLTWH(0, 0, size.x * 0.018, size.y), railPaint);
+    canvas.drawRect(
+      ui.Rect.fromLTWH(size.x * 0.982, 0, size.x * 0.018, size.y),
+      railPaint,
+    );
+    for (var y = 0.0; y < size.y; y += size.y * 0.07) {
+      final boltY = y + size.y * 0.025;
+      canvas.drawCircle(
+        ui.Offset(size.x * 0.009, boltY),
+        size.x * 0.006,
+        ui.Paint()..color = const Color(0xFF8B6334),
+      );
+      canvas.drawCircle(
+        ui.Offset(size.x * 0.991, boltY),
+        size.x * 0.006,
+        ui.Paint()..color = const Color(0xFF8B6334),
+      );
+    }
+
+    // Main cabinet plate behind active content.
+    final cabinet = ui.Rect.fromLTWH(
+      size.x * 0.018,
+      size.y * 0.032,
+      size.x * 0.964,
+      math.min(size.y * 0.80, g.controlPanel.bottom + size.y * 0.055),
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(cabinet, const ui.Radius.circular(18)),
+      ui.Paint()..color = const Color(0x66120B0B),
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(cabinet, const ui.Radius.circular(18)),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 2.4
+        ..color = const Color(0xFF5C3A22),
+    );
+
+    // Small bats around the title.
+    for (final p in <ui.Offset>[
+      ui.Offset(size.x * 0.11, size.y * 0.035),
+      ui.Offset(size.x * 0.18, size.y * 0.055),
+      ui.Offset(size.x * 0.72, size.y * 0.045),
+    ]) {
+      final bat = ui.Path()
+        ..moveTo(p.dx, p.dy)
+        ..quadraticBezierTo(p.dx - size.x * 0.018, p.dy - size.y * 0.010,
+            p.dx - size.x * 0.030, p.dy)
+        ..quadraticBezierTo(p.dx - size.x * 0.014, p.dy - size.y * 0.002,
+            p.dx, p.dy + size.y * 0.010)
+        ..quadraticBezierTo(p.dx + size.x * 0.014, p.dy - size.y * 0.002,
+            p.dx + size.x * 0.030, p.dy)
+        ..quadraticBezierTo(p.dx + size.x * 0.018, p.dy - size.y * 0.010,
+            p.dx, p.dy)
+        ..close();
+      canvas.drawPath(bat, ui.Paint()..color = const Color(0xFF050506));
+    }
 
     _paintText(
       canvas,
       'RED BLACK POKER',
-      ui.Offset(size.x * 0.5, size.y * 0.018),
-      fontSize: size.x * 0.072,
-      color: const Color(0xFFE9B96E),
+      ui.Offset(size.x * 0.5, size.y * 0.021),
+      fontSize: size.x * 0.070,
+      color: const Color(0xFFFFC45C),
       weight: FontWeight.w900,
       centered: true,
     );
@@ -1108,15 +1252,49 @@ class RedBlackPokerGame extends FlameGame {
 
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(panel, const ui.Radius.circular(16)),
-      ui.Paint()..color = const Color(0xF2140A13),
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          panel.topCenter,
+          panel.bottomCenter,
+          const <Color>[
+            Color(0xFF2A0B0B),
+            Color(0xFF14070A),
+            Color(0xFF070608),
+          ],
+        ),
     );
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(panel, const ui.Radius.circular(16)),
       ui.Paint()
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 2.2
-        ..color = const Color(0xFF70451F),
+        ..strokeWidth = 3.2
+        ..color = const Color(0xFF3A2415),
     );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(panel.deflate(3.5), const ui.Radius.circular(13)),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 1.3
+        ..color = const Color(0xFF9C652F),
+    );
+
+    for (final corner in <ui.Offset>[
+      ui.Offset(panel.left + 9, panel.top + 9),
+      ui.Offset(panel.right - 9, panel.top + 9),
+      ui.Offset(panel.left + 9, panel.bottom - 9),
+      ui.Offset(panel.right - 9, panel.bottom - 9),
+    ]) {
+      canvas.drawCircle(
+        corner,
+        3.2,
+        ui.Paint()..color = const Color(0xFFB6844B),
+      );
+      canvas.drawCircle(
+        corner,
+        1.2,
+        ui.Paint()..color = const Color(0xFF25160E),
+      );
+    }
 
     final walletRect = g.walletStrip;
     canvas.drawRRect(
@@ -1831,85 +2009,135 @@ class _GameButton extends PositionComponent with TapCallbacks {
     super.render(canvas);
     if (size.x <= 0 || size.y <= 0) return;
 
-    final pressOffset = _pressed ? size.y * 0.075 : 0.0;
+    final press = _pressed ? size.y * 0.11 : 0.0;
+    final flicker = 0.84 + 0.16 * math.sin(_time * 10.5 + size.x * 0.025);
+
     canvas.save();
-    canvas.translate(0, pressOffset);
+    canvas.translate(0, press);
 
-    final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y - pressOffset);
-    final flicker = 0.82 + 0.18 * math.sin(_time * 11.0 + size.x * 0.03);
-    final activeAccent = !enabled
-        ? const Color(0xFF26272A)
-        : _pressed
-            ? Color.lerp(accent, Colors.black, 0.18)!
-            : accent;
+    final full = ui.Rect.fromLTWH(0, 0, size.x, size.y - press);
+    final outer = full.deflate(size.x * 0.018);
+    final bezel = outer.deflate(size.x * 0.022);
+    final face = bezel.deflate(size.x * 0.018);
 
-    if (enabled && lit) {
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(rect.inflate(size.x * 0.015), const ui.Radius.circular(11)),
-        ui.Paint()
-          ..color = accent.withValues(alpha: 0.24 * flicker)
-          ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.055),
-      );
-    }
-
+    // Button shadow / physical depth.
+    final shadowRect = ui.Rect.fromLTWH(
+      outer.left,
+      outer.top + size.y * 0.08,
+      outer.width,
+      outer.height,
+    );
     canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(
-        ui.Rect.fromLTWH(0, size.y * 0.08, size.x, (rect.height - size.y * 0.04 > 1.0 ? rect.height - size.y * 0.04 : 1.0)),
-        const ui.Radius.circular(9),
-      ),
-      ui.Paint()..color = const Color(0xFF07080A),
+      ui.RRect.fromRectAndRadius(shadowRect, const ui.Radius.circular(11)),
+      ui.Paint()..color = const Color(0xFF020203),
     );
 
+    // Outer forged-metal bezel.
     canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(9)),
+      ui.RRect.fromRectAndRadius(outer, const ui.Radius.circular(11)),
       ui.Paint()
         ..shader = ui.Gradient.linear(
-          rect.topCenter,
-          rect.bottomCenter,
-          <Color>[
-            Color.lerp(activeAccent, Colors.white, enabled ? 0.09 : 0.02)!,
-            Color.lerp(activeAccent, Colors.black, 0.38)!,
+          outer.topCenter,
+          outer.bottomCenter,
+          const <Color>[
+            Color(0xFF6B4A2C),
+            Color(0xFF24160E),
+            Color(0xFF8A6338),
           ],
         ),
     );
     canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(9)),
+      ui.RRect.fromRectAndRadius(outer, const ui.Radius.circular(11)),
       ui.Paint()
         ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = _pressed ? 1.3 : 2.0
-        ..color = enabled
-            ? (lit ? const Color(0xFFFFD36D) : const Color(0xFF9C743B))
-            : const Color(0xFF505156),
+        ..strokeWidth = 1.4
+        ..color = const Color(0xFFB88A4C),
     );
 
+    final activeAccent = !enabled
+        ? const Color(0xFF29292C)
+        : _pressed
+            ? Color.lerp(accent, Colors.black, 0.30)!
+            : accent;
+
     if (enabled && lit) {
-      final flameBase = ui.Offset(size.x * 0.12, rect.center.dy + size.y * 0.10);
-      final flameH = size.y * (0.31 + 0.035 * flicker);
-      final flameW = size.x * 0.055;
-      final flame = ui.Path()
-        ..moveTo(flameBase.dx, flameBase.dy - flameH)
-        ..cubicTo(
-          flameBase.dx + flameW,
-          flameBase.dy - flameH * 0.55,
-          flameBase.dx + flameW * 0.7,
-          flameBase.dy,
-          flameBase.dx,
-          flameBase.dy,
-        )
-        ..cubicTo(
-          flameBase.dx - flameW * 0.7,
-          flameBase.dy,
-          flameBase.dx - flameW,
-          flameBase.dy - flameH * 0.55,
-          flameBase.dx,
-          flameBase.dy - flameH,
-        )
-        ..close();
-      canvas.drawPath(flame, ui.Paint()..color = const Color(0xFFFF6B19));
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(bezel.inflate(size.x * 0.018),
+            const ui.Radius.circular(10)),
+        ui.Paint()
+          ..color = accent.withValues(alpha: 0.28 * flicker)
+          ..maskFilter =
+              ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.065),
+      );
+    }
+
+    // Inner black gasket.
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(bezel, const ui.Radius.circular(9)),
+      ui.Paint()..color = const Color(0xFF08080A),
+    );
+
+    // Illuminated glass/button face.
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(face, const ui.Radius.circular(8)),
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          face.topCenter,
+          face.bottomCenter,
+          <Color>[
+            Color.lerp(activeAccent, Colors.white, enabled ? 0.18 : 0.03)!,
+            activeAccent,
+            Color.lerp(activeAccent, Colors.black, 0.45)!,
+          ],
+          const <double>[0.0, 0.47, 1.0],
+        ),
+    );
+
+    // Top glass reflection.
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(
+        ui.Rect.fromLTWH(
+          face.left + face.width * 0.08,
+          face.top + face.height * 0.08,
+          face.width * 0.84,
+          face.height * 0.18,
+        ),
+        const ui.Radius.circular(8),
+      ),
+      ui.Paint()
+        ..color = Colors.white.withValues(alpha: enabled ? 0.12 : 0.035),
+    );
+
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(face, const ui.Radius.circular(8)),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = _pressed ? 1.0 : 1.6
+        ..color = enabled
+            ? (lit ? const Color(0xFFFFD36D) : const Color(0xFFB27B3A))
+            : const Color(0xFF4C4C50),
+    );
+
+    // Small lamp indicator.
+    if (enabled) {
+      final lamp = ui.Offset(face.left + face.width * 0.10, face.center.dy);
       canvas.drawCircle(
-        flameBase.translate(0, -flameH * 0.30),
-        flameW * 0.35,
-        ui.Paint()..color = const Color(0xFFFFD95A),
+        lamp,
+        size.x * 0.028,
+        ui.Paint()
+          ..color = lit
+              ? const Color(0xFFFF7B1A).withValues(alpha: 0.30 * flicker)
+              : const Color(0xFF2C1C12)
+          ..maskFilter = lit
+              ? ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.035)
+              : null,
+      );
+      canvas.drawCircle(
+        lamp,
+        size.x * 0.013,
+        ui.Paint()
+          ..color =
+              lit ? const Color(0xFFFFD15A) : const Color(0xFF6B3A17),
       );
     }
 
@@ -1917,14 +2145,17 @@ class _GameButton extends PositionComponent with TapCallbacks {
       text: TextSpan(
         text: label,
         style: TextStyle(
-          color: enabled ? const Color(0xFFFFE7B0) : const Color(0xFF77787C),
+          color: enabled
+              ? const Color(0xFFFFEDC5)
+              : const Color(0xFF757579),
           fontWeight: FontWeight.w900,
-          fontSize: size.x * (label.length > 7 ? 0.12 : 0.17),
+          fontSize: size.x * (label.length > 10 ? 0.105 : label.length > 7 ? 0.125 : 0.155),
+          letterSpacing: 0.3,
           shadows: enabled && lit
               ? <Shadow>[
                   Shadow(
-                    color: accent.withValues(alpha: 0.65 * flicker),
-                    blurRadius: size.x * 0.08,
+                    color: accent.withValues(alpha: 0.75 * flicker),
+                    blurRadius: size.x * 0.07,
                   ),
                 ]
               : null,
@@ -1933,12 +2164,14 @@ class _GameButton extends PositionComponent with TapCallbacks {
       textAlign: TextAlign.center,
       textDirection: TextDirection.ltr,
       maxLines: 1,
-    )..layout(maxWidth: size.x * 0.78);
+    )..layout(maxWidth: face.width * 0.78);
 
     painter.paint(
       canvas,
-      ui.Offset((size.x - painter.width) / 2 + (enabled && lit ? size.x * 0.035 : 0),
-          (rect.height - painter.height) / 2),
+      ui.Offset(
+        face.center.dx - painter.width / 2 + (enabled ? face.width * 0.025 : 0),
+        face.center.dy - painter.height / 2,
+      ),
     );
 
     canvas.restore();
