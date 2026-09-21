@@ -367,7 +367,10 @@ class RedBlackPokerGame extends FlameGame {
     final h = size.y;
 
     for (final card in _cardViews) {
-      card.enabled = false;
+      card
+        ..enabled = false
+        ..position = Vector2(-2000, -2000)
+        ..size = Vector2.zero();
     }
 
     for (final button in <_GameButton>[
