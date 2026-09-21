@@ -788,6 +788,7 @@ class RedBlackPokerGame extends FlameGame {
             Color(0xFF0A111A),
             Color(0xFF14090E),
           ],
+          const <double>[0.0, 0.55, 1.0],
         ),
     );
     canvas.drawRRect(
@@ -1261,6 +1262,7 @@ class RedBlackPokerGame extends FlameGame {
             Color(0xFF14070A),
             Color(0xFF070608),
           ],
+          const <double>[0.0, 0.52, 1.0],
         ),
     );
     canvas.drawRRect(
@@ -2044,6 +2046,7 @@ class _GameButton extends PositionComponent with TapCallbacks {
             Color(0xFF24160E),
             Color(0xFF8A6338),
           ],
+          const <double>[0.0, 0.58, 1.0],
         ),
     );
     canvas.drawRRect(
