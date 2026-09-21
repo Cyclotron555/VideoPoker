@@ -11,6 +11,7 @@ import 'model/auto_hold_advisor.dart';
 import 'model/hand_rank.dart';
 import 'model/poker_round.dart';
 import 'model/red_black_session.dart';
+import 'theme/game_theme.dart';
 
 class RedBlackPokerGame extends FlameGame {
   final PokerRound round = PokerRound(
@@ -29,6 +30,12 @@ class RedBlackPokerGame extends FlameGame {
   Duration autoHoldStepDelay = const Duration(milliseconds: 275);
   bool _isAnimatingCards = false;
   bool _redBlackMode = false;
+  bool _controlPanelOpen = false;
+  GameThemeId _selectedTheme = GameThemeId.halloween;
+  int _handsPlayed = 0;
+  int _handsWon = 0;
+  int _redBlackWins = 0;
+  final Map<HandRank, int> _handStats = <HandRank, int>{};
   RedBlackSession? _redBlackSession;
   int? _redBlackCardId;
   String _redBlackMessage = 'CHOOSE RED OR BLACK';
@@ -51,6 +58,12 @@ class RedBlackPokerGame extends FlameGame {
   late final _GameButton _redButton;
   late final _GameButton _blackButton;
   late final _GameButton _rbCollectButton;
+  late final _GameButton _settingsButton;
+  late final _GameButton _panelCloseButton;
+  late final _GameButton _themePrevButton;
+  late final _GameButton _themeNextButton;
+  late final _GameButton _backPrevButton;
+  late final _GameButton _backNextButton;
 
   @override
   Color backgroundColor() => const Color(0xFF07090D);
@@ -171,6 +184,56 @@ class RedBlackPokerGame extends FlameGame {
       accent: const Color(0xFF207538),
       onPressed: _collectRedBlack,
     );
+    _settingsButton = _GameButton(
+      label: '⚙',
+      accent: const Color(0xFF463A5F),
+      onPressed: () {
+        _controlPanelOpen = true;
+        _layout();
+        _syncView();
+      },
+    );
+    _panelCloseButton = _GameButton(
+      label: 'X',
+      accent: const Color(0xFF8A1F2D),
+      onPressed: () {
+        _controlPanelOpen = false;
+        _layout();
+        _syncView();
+      },
+    );
+    _themePrevButton = _GameButton(
+      label: '<',
+      accent: const Color(0xFF4B4167),
+      onPressed: () {
+        _cycleTheme(-1);
+        _syncView();
+      },
+    );
+    _themeNextButton = _GameButton(
+      label: '>',
+      accent: const Color(0xFF4B4167),
+      onPressed: () {
+        _cycleTheme(1);
+        _syncView();
+      },
+    );
+    _backPrevButton = _GameButton(
+      label: '<',
+      accent: const Color(0xFF5E3B25),
+      onPressed: () {
+        _cardBackVariant = (_cardBackVariant + 3) % 4;
+        _syncView();
+      },
+    );
+    _backNextButton = _GameButton(
+      label: '>',
+      accent: const Color(0xFF5E3B25),
+      onPressed: () {
+        _cardBackVariant = (_cardBackVariant + 1) % 4;
+        _syncView();
+      },
+    );
 
     await addAll(<Component>[
       _mainDrawButton,
@@ -185,6 +248,12 @@ class RedBlackPokerGame extends FlameGame {
       _redButton,
       _blackButton,
       _rbCollectButton,
+      _settingsButton,
+      _panelCloseButton,
+      _themePrevButton,
+      _themeNextButton,
+      _backPrevButton,
+      _backNextButton,
     ]);
 
     _layout();
@@ -202,7 +271,9 @@ class RedBlackPokerGame extends FlameGame {
 
   void _layout() {
     if (_cardViews.isEmpty) return;
-    if (_redBlackMode) {
+    if (_controlPanelOpen) {
+      _layoutControlPanel();
+    } else if (_redBlackMode) {
       _layoutRedBlack();
     } else {
       _layoutMainGame();
@@ -277,9 +348,61 @@ class RedBlackPokerGame extends FlameGame {
       )
       ..size = Vector2(decisionButtonWidth, buttonHeight);
 
+    _settingsButton
+      ..position = Vector2(w * 0.885, h * 0.012)
+      ..size = Vector2(w * 0.08, h * 0.04);
+
     _hideButton(_redButton);
     _hideButton(_blackButton);
     _hideButton(_rbCollectButton);
+    _hideButton(_panelCloseButton);
+    _hideButton(_themePrevButton);
+    _hideButton(_themeNextButton);
+    _hideButton(_backPrevButton);
+    _hideButton(_backNextButton);
+  }
+
+  void _layoutControlPanel() {
+    final w = size.x;
+    final h = size.y;
+
+    for (final card in _cardViews) {
+      card.enabled = false;
+    }
+
+    for (final button in <_GameButton>[
+      _mainDrawButton,
+      _betDownButton,
+      _betUpButton,
+      _betMaxButton,
+      _cashOutButton,
+      _insertCoinsButton,
+      _refillWalletButton,
+      _doubleUpButton,
+      _collectButton,
+      _redButton,
+      _blackButton,
+      _rbCollectButton,
+      _settingsButton,
+    ]) {
+      _hideButton(button);
+    }
+
+    _panelCloseButton
+      ..position = Vector2(w * 0.86, h * 0.08)
+      ..size = Vector2(w * 0.09, h * 0.05);
+    _themePrevButton
+      ..position = Vector2(w * 0.10, h * 0.25)
+      ..size = Vector2(w * 0.11, h * 0.055);
+    _themeNextButton
+      ..position = Vector2(w * 0.79, h * 0.25)
+      ..size = Vector2(w * 0.11, h * 0.055);
+    _backPrevButton
+      ..position = Vector2(w * 0.10, h * 0.39)
+      ..size = Vector2(w * 0.11, h * 0.055);
+    _backNextButton
+      ..position = Vector2(w * 0.79, h * 0.39)
+      ..size = Vector2(w * 0.11, h * 0.055);
   }
 
   void _layoutRedBlack() {
@@ -301,6 +424,12 @@ class RedBlackPokerGame extends FlameGame {
     _hideButton(_refillWalletButton);
     _hideButton(_doubleUpButton);
     _hideButton(_collectButton);
+    _hideButton(_settingsButton);
+    _hideButton(_panelCloseButton);
+    _hideButton(_themePrevButton);
+    _hideButton(_themeNextButton);
+    _hideButton(_backPrevButton);
+    _hideButton(_backNextButton);
 
     final top = h * 0.70;
     final gap = w * 0.025;
@@ -319,6 +448,37 @@ class RedBlackPokerGame extends FlameGame {
       ..size = Vector2(bw, bh);
   }
 
+  void _cycleTheme(int delta) {
+    final themes = <GameThemeId>[
+      GameThemeId.halloween,
+      GameThemeId.classic,
+      GameThemeId.christmas,
+    ];
+    final current = themes.indexOf(_selectedTheme);
+    _selectedTheme = themes[(current + delta + themes.length) % themes.length];
+  }
+
+  String get _themeName {
+    switch (_selectedTheme) {
+      case GameThemeId.halloween:
+        return 'HALLOWEEN';
+      case GameThemeId.classic:
+        return 'CLASSIC';
+      case GameThemeId.christmas:
+        return 'CHRISTMAS';
+    }
+  }
+
+  String get _cardBackName {
+    const names = <String>[
+      'HAUNTED CASTLE',
+      'WITCH MOON',
+      'JACK-O-LANTERN',
+      'SKULL HARLEQUIN',
+    ];
+    return names[_cardBackVariant % names.length];
+  }
+
   void _hideButton(_GameButton button) {
     button
       ..position = Vector2(-2000, -2000)
@@ -326,7 +486,7 @@ class RedBlackPokerGame extends FlameGame {
   }
 
   Future<void> _mainDrawPressed() async {
-    if (_isAnimatingCards || _redBlackMode) return;
+    if (_isAnimatingCards || _redBlackMode || _controlPanelOpen) return;
     if (round.canStartHand) {
       await _dealAnimated();
     } else if (round.canDrawReplacement) {
@@ -392,6 +552,12 @@ class RedBlackPokerGame extends FlameGame {
       _syncView();
     }
 
+    _handsPlayed += 1;
+    if (round.result != HandRank.none) {
+      _handsWon += 1;
+      _handStats[round.result] = (_handStats[round.result] ?? 0) + 1;
+    }
+
     _isAnimatingCards = false;
     _syncView();
 
@@ -440,6 +606,7 @@ class RedBlackPokerGame extends FlameGame {
     _redBlackCardId = turn.cardId;
 
     if (turn.correct) {
+      _redBlackWins += 1;
       _redBlackMessage = session.phase == RedBlackPhase.jackpot
           ? '64X JACKPOT!'
           : 'CORRECT — ' + session.currentWin.toString();
@@ -479,6 +646,14 @@ class RedBlackPokerGame extends FlameGame {
   }
 
   void _syncView() {
+    if (_controlPanelOpen) {
+      _panelCloseButton.enabled = true;
+      _themePrevButton.enabled = true;
+      _themeNextButton.enabled = true;
+      _backPrevButton.enabled = true;
+      _backNextButton.enabled = true;
+      return;
+    }
     if (_redBlackMode) {
       final session = _redBlackSession;
       _redButton.enabled = session?.canGuess ?? false;
@@ -627,7 +802,9 @@ class RedBlackPokerGame extends FlameGame {
 
   @override
   void render(ui.Canvas canvas) {
-    if (_redBlackMode) {
+    if (_controlPanelOpen) {
+      _renderSettingsPanel(canvas);
+    } else if (_redBlackMode) {
       _renderRedBlack(canvas);
     } else {
       _renderBackdrop(canvas);
@@ -637,6 +814,125 @@ class RedBlackPokerGame extends FlameGame {
       _renderStatus(canvas);
     }
     super.render(canvas);
+  }
+
+  void _renderSettingsPanel(ui.Canvas canvas) {
+    final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+    canvas.drawRect(rect, ui.Paint()..color = const Color(0xFF05070B));
+
+    final panel = ui.Rect.fromLTWH(
+      size.x * 0.05,
+      size.y * 0.06,
+      size.x * 0.90,
+      size.y * 0.84,
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(panel, const ui.Radius.circular(18)),
+      ui.Paint()..color = const Color(0xFF102235),
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(panel, const ui.Radius.circular(18)),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..color = const Color(0xFF8B6334),
+    );
+
+    _paintText(
+      canvas,
+      'CONTROL PANEL',
+      ui.Offset(size.x * 0.5, size.y * 0.12),
+      fontSize: size.x * 0.060,
+      color: const Color(0xFFFFD27A),
+      weight: FontWeight.w900,
+      centered: true,
+    );
+
+    _paintText(
+      canvas,
+      'THEME',
+      ui.Offset(size.x * 0.5, size.y * 0.21),
+      fontSize: size.x * 0.032,
+      color: const Color(0xFFE8D19C),
+      weight: FontWeight.w800,
+      centered: true,
+    );
+    _paintText(
+      canvas,
+      _themeName,
+      ui.Offset(size.x * 0.5, size.y * 0.278),
+      fontSize: size.x * 0.046,
+      color: const Color(0xFFFFFFFF),
+      weight: FontWeight.w900,
+      centered: true,
+    );
+
+    _paintText(
+      canvas,
+      'CARD BACK',
+      ui.Offset(size.x * 0.5, size.y * 0.35),
+      fontSize: size.x * 0.032,
+      color: const Color(0xFFE8D19C),
+      weight: FontWeight.w800,
+      centered: true,
+    );
+    _paintText(
+      canvas,
+      _cardBackName,
+      ui.Offset(size.x * 0.5, size.y * 0.418),
+      fontSize: size.x * 0.038,
+      color: const Color(0xFFFFFFFF),
+      weight: FontWeight.w900,
+      centered: true,
+    );
+
+    _paintText(
+      canvas,
+      'STATISTICS',
+      ui.Offset(size.x * 0.5, size.y * 0.50),
+      fontSize: size.x * 0.038,
+      color: const Color(0xFFFFD27A),
+      weight: FontWeight.w900,
+      centered: true,
+    );
+
+    final stats = <String, int>{
+      'Hands': _handsPlayed,
+      'Wins': _handsWon,
+      'Two Pair': _handStats[HandRank.twoPair] ?? 0,
+      'Three of a Kind': _handStats[HandRank.threeOfAKind] ?? 0,
+      'Straights': _handStats[HandRank.straight] ?? 0,
+      'Flushes': _handStats[HandRank.flush] ?? 0,
+      'Full Houses': _handStats[HandRank.fullHouse] ?? 0,
+      'Four of a Kind': _handStats[HandRank.fourOfAKind] ?? 0,
+      'Straight Flushes': _handStats[HandRank.straightFlush] ?? 0,
+      'Royal Flushes': _handStats[HandRank.royalFlush] ?? 0,
+      'Five of a Kind': _handStats[HandRank.fiveOfAKind] ?? 0,
+      'Red/Black Wins': _redBlackWins,
+    };
+
+    final left = size.x * 0.14;
+    var y = size.y * 0.55;
+    for (final entry in stats.entries) {
+      _paintText(
+        canvas,
+        entry.key,
+        ui.Offset(left, y),
+        fontSize: size.x * 0.026,
+        color: const Color(0xFFE6CFA0),
+        weight: FontWeight.w700,
+      );
+      _paintText(
+        canvas,
+        entry.value.toString(),
+        ui.Offset(size.x * 0.82, y),
+        fontSize: size.x * 0.028,
+        color: const Color(0xFFFF6A5E),
+        weight: FontWeight.w900,
+        centered: true,
+      );
+      y += size.y * 0.027;
+    }
   }
 
   void _renderBackdrop(ui.Canvas canvas) {
