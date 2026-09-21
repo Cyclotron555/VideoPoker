@@ -522,11 +522,17 @@ class RedBlackPokerGame extends FlameGame {
     }
     _lastBonusProgress = round.bonusProgress;
 
+    _layoutMainGame();
     if (!decision) {
       _hideButton(_doubleUpButton);
       _hideButton(_collectButton);
     } else {
-      _layoutMainGame();
+      _hideButton(_mainDrawButton);
+      _hideButton(_betDownButton);
+      _hideButton(_betUpButton);
+      _hideButton(_betMaxButton);
+      _hideButton(_cashOutButton);
+      _hideButton(_insertCoinsButton);
     }
   }
 
