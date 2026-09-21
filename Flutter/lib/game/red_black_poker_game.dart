@@ -40,8 +40,11 @@ class RedBlackPokerGame extends FlameGame {
   double _bonusFlareTimer = 0;
 
   late final _GameButton _mainDrawButton;
-  late final _GameButton _betOneButton;
+  late final _GameButton _betDownButton;
+  late final _GameButton _betUpButton;
   late final _GameButton _betMaxButton;
+  late final _GameButton _cashOutButton;
+  late final _GameButton _insertCoinsButton;
   late final _GameButton _doubleUpButton;
   late final _GameButton _collectButton;
   late final _GameButton _redButton;
@@ -87,8 +90,16 @@ class RedBlackPokerGame extends FlameGame {
       accent: const Color(0xFFBD1722),
       onPressed: _mainDrawPressed,
     );
-    _betOneButton = _GameButton(
-      label: 'BET ONE',
+    _betDownButton = _GameButton(
+      label: 'BET -',
+      accent: const Color(0xFF8E4D0B),
+      onPressed: () {
+        round.changeBet(-1);
+        _syncView();
+      },
+    );
+    _betUpButton = _GameButton(
+      label: 'BET +',
       accent: const Color(0xFFB46D0B),
       onPressed: () {
         round.changeBet(1);
@@ -106,6 +117,22 @@ class RedBlackPokerGame extends FlameGame {
         while (round.bet < 5) {
           round.changeBet(1);
         }
+        _syncView();
+      },
+    );
+    _cashOutButton = _GameButton(
+      label: 'CASH OUT',
+      accent: const Color(0xFF6D4A1C),
+      onPressed: () {
+        round.cashOut();
+        _syncView();
+      },
+    );
+    _insertCoinsButton = _GameButton(
+      label: 'INSERT COINS',
+      accent: const Color(0xFF365A72),
+      onPressed: () {
+        round.insertCoins(10);
         _syncView();
       },
     );
@@ -138,8 +165,11 @@ class RedBlackPokerGame extends FlameGame {
 
     await addAll(<Component>[
       _mainDrawButton,
-      _betOneButton,
+      _betDownButton,
+      _betUpButton,
       _betMaxButton,
+      _cashOutButton,
+      _insertCoinsButton,
       _doubleUpButton,
       _collectButton,
       _redButton,
@@ -191,41 +221,46 @@ class RedBlackPokerGame extends FlameGame {
     }
 
     final statusTop = cardTop + cardHeight + h * 0.022;
-    final buttonTop = statusTop + h * 0.088;
+    final controlsTop = statusTop + h * 0.083;
     final sidePad = w * 0.04;
-    final gapButtons = w * 0.018;
-    final normalButtonWidth =
-        (w - sidePad * 2 - gapButtons * 2) / 3;
-    final buttonHeight = h * 0.065;
+    final gapButtons = w * 0.014;
+    final buttonHeight = h * 0.054;
+    final smallButtonWidth = (w - sidePad * 2 - gapButtons * 3) / 4;
 
-    _betOneButton
-      ..position = Vector2(sidePad, buttonTop)
-      ..size = Vector2(normalButtonWidth, buttonHeight);
+    _betDownButton
+      ..position = Vector2(sidePad, controlsTop)
+      ..size = Vector2(smallButtonWidth, buttonHeight);
+    _betUpButton
+      ..position = Vector2(sidePad + smallButtonWidth + gapButtons, controlsTop)
+      ..size = Vector2(smallButtonWidth, buttonHeight);
     _betMaxButton
-      ..position = Vector2(
-        sidePad + normalButtonWidth + gapButtons,
-        buttonTop,
-      )
-      ..size = Vector2(normalButtonWidth, buttonHeight);
+      ..position = Vector2(sidePad + (smallButtonWidth + gapButtons) * 2, controlsTop)
+      ..size = Vector2(smallButtonWidth, buttonHeight);
     _mainDrawButton
-      ..position = Vector2(
-        sidePad + (normalButtonWidth + gapButtons) * 2,
-        buttonTop,
-      )
-      ..size = Vector2(normalButtonWidth, buttonHeight);
+      ..position = Vector2(sidePad + (smallButtonWidth + gapButtons) * 3, controlsTop)
+      ..size = Vector2(smallButtonWidth, buttonHeight);
 
-    final decisionButtonWidth = w * 0.24;
+    final lowerTop = controlsTop + buttonHeight + h * 0.012;
+    final lowerButtonWidth = (w - sidePad * 2 - gapButtons) / 2;
+    _cashOutButton
+      ..position = Vector2(sidePad, lowerTop)
+      ..size = Vector2(lowerButtonWidth, buttonHeight);
+    _insertCoinsButton
+      ..position = Vector2(sidePad + lowerButtonWidth + gapButtons, lowerTop)
+      ..size = Vector2(lowerButtonWidth, buttonHeight);
+
+    final decisionButtonWidth = w * 0.30;
     final decisionGap = w * 0.025;
     final decisionStart =
         w * 0.5 - (decisionButtonWidth * 2 + decisionGap) * 0.5;
 
     _doubleUpButton
-      ..position = Vector2(decisionStart, buttonTop)
+      ..position = Vector2(decisionStart, controlsTop)
       ..size = Vector2(decisionButtonWidth, buttonHeight);
     _collectButton
       ..position = Vector2(
         decisionStart + decisionButtonWidth + decisionGap,
-        buttonTop,
+        controlsTop,
       )
       ..size = Vector2(decisionButtonWidth, buttonHeight);
 
@@ -245,8 +280,11 @@ class RedBlackPokerGame extends FlameGame {
     }
 
     _hideButton(_mainDrawButton);
-    _hideButton(_betOneButton);
+    _hideButton(_betDownButton);
+    _hideButton(_betUpButton);
     _hideButton(_betMaxButton);
+    _hideButton(_cashOutButton);
+    _hideButton(_insertCoinsButton);
     _hideButton(_doubleUpButton);
     _hideButton(_collectButton);
 
@@ -460,11 +498,17 @@ class RedBlackPokerGame extends FlameGame {
     _mainDrawButton.accent = round.canStartHand
         ? const Color(0xFF23853A)
         : const Color(0xFF175C8F);
-    _betOneButton.enabled = !_isAnimatingCards &&
-        (round.phase == RoundPhase.idle || round.phase == RoundPhase.result);
-    _betMaxButton.enabled = _betOneButton.enabled;
-    _betOneButton.lit = _betOneButton.enabled;
+    final moneyControls = !_isAnimatingCards && round.canAdjustMoney;
+    _betDownButton.enabled = moneyControls && round.bet > 1;
+    _betUpButton.enabled = moneyControls && round.bet < 5;
+    _betMaxButton.enabled = moneyControls && round.bet < 5;
+    _cashOutButton.enabled = !_isAnimatingCards && round.canCashOut;
+    _insertCoinsButton.enabled = !_isAnimatingCards && round.canInsertCoins;
+    _betDownButton.lit = _betDownButton.enabled;
+    _betUpButton.lit = _betUpButton.enabled;
     _betMaxButton.lit = _betMaxButton.enabled;
+    _cashOutButton.lit = _cashOutButton.enabled;
+    _insertCoinsButton.lit = _insertCoinsButton.enabled;
 
     final decision = round.phase == RoundPhase.winDecision && !_isAnimatingCards;
     _doubleUpButton.enabled = decision;
@@ -560,6 +604,7 @@ class RedBlackPokerGame extends FlameGame {
       _renderBackdrop(canvas);
       _renderZombieCabinet(canvas);
       _renderPayTable(canvas);
+      _renderControlPanel(canvas);
       _renderStatus(canvas);
     }
     super.render(canvas);
@@ -776,6 +821,71 @@ class RedBlackPokerGame extends FlameGame {
       fontSize: size.x * 0.024,
       color: const Color(0xFFB6DB7B),
       weight: FontWeight.w700,
+      centered: true,
+    );
+  }
+
+  void _renderControlPanel(ui.Canvas canvas) {
+    final cardTop = size.y * 0.371;
+    final gap = (size.x * 0.012).clamp(4.0, 12.0);
+    final cardWidth = ((size.x * 0.94) - gap * 4) / 5;
+    final cardHeight = cardWidth * 1.42;
+    final statusTop = cardTop + cardHeight + size.y * 0.022;
+    final panelTop = statusTop + size.y * 0.071;
+    final panelLeft = size.x * 0.025;
+    final panelWidth = size.x * 0.95;
+    final panelHeight = size.y * 0.175;
+    final panel = ui.Rect.fromLTWH(panelLeft, panelTop, panelWidth, panelHeight);
+
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(panel, const ui.Radius.circular(16)),
+      ui.Paint()..color = const Color(0xF2140A13),
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(panel, const ui.Radius.circular(16)),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..color = const Color(0xFF70451F),
+    );
+
+    final walletTop = panel.bottom - size.y * 0.042;
+    final walletRect = ui.Rect.fromLTWH(
+      panel.left + size.x * 0.03,
+      walletTop,
+      panel.width - size.x * 0.06,
+      size.y * 0.034,
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(walletRect, const ui.Radius.circular(7)),
+      ui.Paint()..color = const Color(0xD9060709),
+    );
+
+    _paintText(
+      canvas,
+      'BANK  ' + round.bank.toString(),
+      ui.Offset(walletRect.left + walletRect.width * 0.18, walletRect.center.dy),
+      fontSize: size.x * 0.022,
+      color: const Color(0xFFC9A96A),
+      weight: FontWeight.w800,
+      centered: true,
+    );
+    _paintText(
+      canvas,
+      r'$ WALLET $  ' + round.wallet.toString(),
+      ui.Offset(walletRect.center.dx, walletRect.center.dy),
+      fontSize: size.x * 0.025,
+      color: const Color(0xFFFFD66F),
+      weight: FontWeight.w900,
+      centered: true,
+    );
+    _paintText(
+      canvas,
+      'MACHINE  ' + round.credits.toString(),
+      ui.Offset(walletRect.right - walletRect.width * 0.18, walletRect.center.dy),
+      fontSize: size.x * 0.022,
+      color: const Color(0xFFC9A96A),
+      weight: FontWeight.w800,
       centered: true,
     );
   }
