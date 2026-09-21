@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'model/auto_hold_advisor.dart';
 import 'model/hand_rank.dart';
 import 'model/poker_round.dart';
+import 'model/playing_card.dart';
 import 'model/red_black_session.dart';
 import 'theme/game_theme.dart';
 
@@ -30,6 +31,7 @@ class RedBlackPokerGame extends FlameGame {
   ui.Image? _paytableArt;
   ui.Image? _bottomPanelArt;
   ui.Image? _controlPanelHeaderArt;
+  ui.Image? _horrorCardsAtlas;
 
   final AutoHoldAdvisor _autoHoldAdvisor = const AutoHoldAdvisor();
   Duration cardDisplayDelay = const Duration(milliseconds: 275);
@@ -101,6 +103,7 @@ class RedBlackPokerGame extends FlameGame {
     _paytableArt = await images.load('paytable_frame.jpg');
     _bottomPanelArt = await images.load('bottom_panel.jpg');
     _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
+    _horrorCardsAtlas = await images.load('horror_cards_atlas.jpg');
 
     for (var i = 0; i < 10; i++) {
       _zombieHeadImages.add(
@@ -645,10 +648,12 @@ class RedBlackPokerGame extends FlameGame {
     for (var i = 0; i < _cardViews.length; i++) {
       final hasCard = i < round.cards.length;
       final winningMask = _winningCardMask();
+      final card = hasCard ? round.cards[i] : null;
       _cardViews[i]
-        ..cardImage = hasCard && _revealed[i]
-            ? _cardImages[round.cards[i].assetId]
-            : null
+        ..cardImage = null
+        ..faceAtlas = hasCard && _revealed[i] ? _horrorCardsAtlas : null
+        ..faceColumn = card == null ? 0 : _horrorAtlasColumn(card.rank)
+        ..faceRow = card == null ? 0 : _horrorAtlasRow(card.suit)
         ..held = round.phase == RoundPhase.chooseHolds &&
             round.held[i] &&
             _revealed[i]
@@ -712,6 +717,35 @@ class RedBlackPokerGame extends FlameGame {
       _hideButton(_insertCoinsButton);
       _hideButton(_refillWalletButton);
     }
+  }
+
+  int _horrorAtlasColumn(int rank) {
+    return switch (rank) {
+      1 => 0,
+      13 => 1,
+      12 => 2,
+      11 => 3,
+      10 => 4,
+      9 => 5,
+      8 => 6,
+      7 => 7,
+      6 => 8,
+      5 => 9,
+      4 => 10,
+      3 => 11,
+      2 => 12,
+      _ => 0,
+    };
+  }
+
+  int _horrorAtlasRow(CardSuit? suit) {
+    return switch (suit) {
+      CardSuit.hearts => 0,
+      CardSuit.diamonds => 1,
+      CardSuit.clubs => 2,
+      CardSuit.spades => 3,
+      null => 0,
+    };
   }
 
   List<bool> _winningCardMask() {
@@ -992,7 +1026,7 @@ class RedBlackPokerGame extends FlameGame {
     );
 
     if (_titleBannerArt != null) {
-      _drawImageContain(canvas, _titleBannerArt!, g.titleBanner);
+      _drawImageCover(canvas, _titleBannerArt!, g.titleBanner, opacity: 1.0);
     } else {
       _paintText(
         canvas,
@@ -1004,6 +1038,16 @@ class RedBlackPokerGame extends FlameGame {
         centered: true,
       );
     }
+
+    _paintText(
+      canvas,
+      'DEAL  •  DRAW  •  WIN',
+      ui.Offset(size.x * 0.5, g.titleBanner.bottom - size.y * 0.010),
+      fontSize: size.x * 0.030,
+      color: const Color(0xFFFFD16A),
+      weight: FontWeight.w900,
+      centered: true,
+    );
 
     final railPaint = ui.Paint()..color = const Color(0xFF261713);
     canvas.drawRect(ui.Rect.fromLTWH(0, 0, size.x * 0.018, size.y), railPaint);
@@ -1149,19 +1193,41 @@ class RedBlackPokerGame extends FlameGame {
     final width = rect.width;
     final height = rect.height;
 
-    if (_paytableArt != null) {
-      _drawImageCover(canvas, _paytableArt!, rect, opacity: 0.96);
-      final inner = rect.deflate(rect.width * 0.055);
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(inner, const ui.Radius.circular(5)),
-        ui.Paint()..color = const Color(0xDDE0C58F),
-      );
-    } else {
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(8)),
-        ui.Paint()..color = const Color(0xDD08090B),
-      );
-    }
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(10)),
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          rect.topCenter,
+          rect.bottomCenter,
+          const <Color>[
+            Color(0xFFF3D99F),
+            Color(0xFFD9B777),
+            Color(0xFFE7C98B),
+          ],
+          const <double>[0.0, 0.55, 1.0],
+        ),
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(rect, const ui.Radius.circular(10)),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 4
+        ..color = const Color(0xFF2B160D),
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(rect.deflate(4), const ui.Radius.circular(8)),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = const Color(0xFF9C632D),
+    );
+    canvas.drawLine(
+      ui.Offset(rect.center.dx, rect.top + rect.height * 0.08),
+      ui.Offset(rect.center.dx, rect.bottom - rect.height * 0.12),
+      ui.Paint()
+        ..strokeWidth = 1.2
+        ..color = const Color(0x886B3B1B),
+    );
 
     const rows = <HandRank>[
       HandRank.fiveOfAKind,
@@ -1628,15 +1694,15 @@ class _CabinetGeometry {
   double get buttonGap => w * 0.014;
 
   ui.Rect get titleBanner =>
-      ui.Rect.fromLTWH(w * 0.025, h * 0.012, w * 0.95, h * 0.19);
+      ui.Rect.fromLTWH(w * 0.025, h * 0.010, w * 0.95, h * 0.185);
 
   ui.Rect get zombieFrame =>
-      ui.Rect.fromLTWH(w * 0.035, h * 0.205, w * 0.93, h * 0.095);
+      ui.Rect.fromLTWH(w * 0.035, h * 0.202, w * 0.93, h * 0.092);
 
   ui.Rect get payTable =>
-      ui.Rect.fromLTWH(w * 0.055, h * 0.307, w * 0.89, h * 0.145);
+      ui.Rect.fromLTWH(w * 0.055, h * 0.302, w * 0.89, h * 0.145);
 
-  double get cardTop => payTable.bottom + h * 0.018;
+  double get cardTop => payTable.bottom + h * 0.025;
   double get cardWidth => ((w * 0.94) - gap * 4) / 5;
   double get cardHeight => cardWidth * 1.42;
 
@@ -1655,7 +1721,7 @@ class _CabinetGeometry {
   }
 
   double get statusTop => cardTop + cardHeight + h * 0.022;
-  double get statusMessageY => statusTop - h * 0.012;
+  double get statusMessageY => cardTop - h * 0.012;
 
   List<ui.Rect> get statusPanels {
     final width = w * 0.29;
@@ -1737,7 +1803,7 @@ class _CabinetGeometry {
       ui.Rect.fromLTWH(w * 0.025, statusTop + h * 0.064, w * 0.95, h * 0.172);
 
   ui.Rect get bottomArt =>
-      ui.Rect.fromLTWH(w * 0.035, h * 0.805, w * 0.93, h * 0.13);
+      ui.Rect.fromLTWH(w * 0.035, h * 0.835, w * 0.93, h * 0.135);
 
   ui.Rect get walletStrip => ui.Rect.fromLTWH(
         controlPanel.left + w * 0.03,
@@ -1789,6 +1855,9 @@ class _CardView extends PositionComponent with TapCallbacks {
   final int index;
   final VoidCallback onTap;
   ui.Image? cardImage;
+  ui.Image? faceAtlas;
+  int faceColumn = 0;
+  int faceRow = 0;
   ui.Image? backImage;
   bool held = false;
   bool winning = false;
@@ -1809,7 +1878,22 @@ class _CardView extends PositionComponent with TapCallbacks {
       ui.Paint()..color = const Color(0xFFF4F0E6),
     );
 
-    if (cardImage != null) {
+    if (faceAtlas != null) {
+      final cellW = faceAtlas!.width / 13.0;
+      final cellH = faceAtlas!.height / 4.0;
+      final src = ui.Rect.fromLTWH(
+        faceColumn * cellW,
+        faceRow * cellH,
+        cellW,
+        cellH,
+      );
+      canvas.drawImageRect(
+        faceAtlas!,
+        src,
+        rect,
+        ui.Paint()..filterQuality = ui.FilterQuality.high,
+      );
+    } else if (cardImage != null) {
       canvas.drawImageRect(
         cardImage!,
         ui.Rect.fromLTWH(
