@@ -175,28 +175,42 @@ class RedBlackPokerGame extends FlameGame {
 
     final statusTop = cardTop + cardHeight + h * 0.022;
     final buttonTop = statusTop + h * 0.088;
-    final sidePad = w * 0.035;
-    final small = w * 0.19;
-    final center = w * 0.25;
+    final sidePad = w * 0.04;
+    final gapButtons = w * 0.018;
+    final normalButtonWidth =
+        (w - sidePad * 2 - gapButtons * 2) / 3;
     final buttonHeight = h * 0.065;
 
     _betOneButton
       ..position = Vector2(sidePad, buttonTop)
-      ..size = Vector2(small, buttonHeight);
+      ..size = Vector2(normalButtonWidth, buttonHeight);
     _betMaxButton
-      ..position = Vector2(sidePad + small + w * 0.012, buttonTop)
-      ..size = Vector2(small, buttonHeight);
+      ..position = Vector2(
+        sidePad + normalButtonWidth + gapButtons,
+        buttonTop,
+      )
+      ..size = Vector2(normalButtonWidth, buttonHeight);
     _mainDrawButton
-      ..position = Vector2(w * 0.5 - center * 0.5, buttonTop)
-      ..size = Vector2(center, buttonHeight);
+      ..position = Vector2(
+        sidePad + (normalButtonWidth + gapButtons) * 2,
+        buttonTop,
+      )
+      ..size = Vector2(normalButtonWidth, buttonHeight);
 
-    final rightX = w - sidePad - small;
+    final decisionButtonWidth = w * 0.24;
+    final decisionGap = w * 0.025;
+    final decisionStart =
+        w * 0.5 - (decisionButtonWidth * 2 + decisionGap) * 0.5;
+
     _doubleUpButton
-      ..position = Vector2(rightX - small - w * 0.012, buttonTop)
-      ..size = Vector2(small, buttonHeight);
+      ..position = Vector2(decisionStart, buttonTop)
+      ..size = Vector2(decisionButtonWidth, buttonHeight);
     _collectButton
-      ..position = Vector2(rightX, buttonTop)
-      ..size = Vector2(small, buttonHeight);
+      ..position = Vector2(
+        decisionStart + decisionButtonWidth + decisionGap,
+        buttonTop,
+      )
+      ..size = Vector2(decisionButtonWidth, buttonHeight);
 
     _hideButton(_redButton);
     _hideButton(_blackButton);
