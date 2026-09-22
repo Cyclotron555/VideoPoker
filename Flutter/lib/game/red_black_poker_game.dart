@@ -887,29 +887,8 @@ class RedBlackPokerGame extends FlameGame {
       }
     }
 
-    // Replace the baked status captions and demo values.  Mask only the
-    // caption/value interiors so the illustrated brass frames stay untouched.
-    final statusLabels = <String>['BET', 'CASH', 'WIN'];
-    for (var i = 0; i < g.statusPanels.length; i++) {
-      final panel = g.statusPanels[i];
-      final labelPatch = ui.Rect.fromLTRB(
-        panel.left + panel.width * 0.16,
-        panel.top + panel.height * 0.05,
-        panel.right - panel.width * 0.16,
-        panel.top + panel.height * 0.38,
-      );
-      canvas.drawRect(labelPatch, ui.Paint()..color = const Color(0xF2070809));
-      _paintText(
-        canvas,
-        statusLabels[i],
-        labelPatch.center,
-        fontSize: size.x * 0.018,
-        color: const Color(0xFFC9A96A),
-        weight: FontWeight.w800,
-        centered: true,
-      );
-    }
-
+    // Only live values belong in these three upper readouts.
+    // No extra captions or painted background rectangles.
     final values = <String>[
       round.bet.toString(),
       round.cash.toString(),
@@ -917,14 +896,10 @@ class RedBlackPokerGame extends FlameGame {
     ];
     for (var i = 0; i < g.statusValueMasks.length; i++) {
       final r = g.statusValueMasks[i];
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(r, const ui.Radius.circular(4)),
-        ui.Paint()..color = const Color(0xF2070809),
-      );
       _paintText(
         canvas,
         values[i],
-        r.center,
+        ui.Offset(r.center.dx, r.center.dy + r.height * 0.10),
         fontSize: size.x * 0.047,
         color: i == 0 ? const Color(0xFFFF3E3E) : const Color(0xFFFFED52),
         weight: FontWeight.w900,
@@ -932,15 +907,14 @@ class RedBlackPokerGame extends FlameGame {
       );
     }
 
-    // Wallet display and bottom accounting strip.
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(g.walletValueMask, const ui.Radius.circular(4)),
-      ui.Paint()..color = const Color(0xF2070809),
-    );
+    // Center wallet readout is also number-only.
     _paintText(
       canvas,
       round.wallet.toString(),
-      g.walletValueMask.center,
+      ui.Offset(
+        g.walletValueMask.center.dx,
+        g.walletValueMask.center.dy + g.walletValueMask.height * 0.10,
+      ),
       fontSize: size.x * 0.045,
       color: const Color(0xFFFFE05B),
       weight: FontWeight.w900,
@@ -948,16 +922,16 @@ class RedBlackPokerGame extends FlameGame {
     );
 
     final bottomValues = <String>[
-      round.cash.toString(),
-      round.wallet.toString(),
-      round.totalFunds.toString(),
+      round.totalFunds.toString(), // BANK
+      round.wallet.toString(),     // WALLET
+      round.cash.toString(),       // MACHINE
     ];
     for (var i = 0; i < g.bottomValueMasks.length; i++) {
       final r = g.bottomValueMasks[i];
       _paintText(
         canvas,
         bottomValues[i],
-        ui.Offset(r.center.dx, r.center.dy + r.height * 0.16),
+        ui.Offset(r.center.dx, r.center.dy + r.height * 0.24),
         fontSize: size.x * 0.027,
         color: const Color(0xFFFFE06A),
         weight: FontWeight.w900,
@@ -1859,11 +1833,11 @@ class _CabinetGeometry {
   // using their real centers removes the left-to-right drift.  The row is also
   // lowered slightly so the live faces sit vertically inside the gold frames.
   List<ui.Rect> get cardRects => <ui.Rect>[
-        _src(30, 894, 188, 1098),
-        _src(208, 894, 366, 1098),
-        _src(386, 894, 544, 1098),
-        _src(564, 894, 722, 1098),
-        _src(742, 894, 900, 1098),
+        _src(36, 900, 194, 1104),
+        _src(214, 900, 372, 1104),
+        _src(392, 900, 550, 1104),
+        _src(570, 900, 728, 1104),
+        _src(748, 900, 906, 1104),
       ];
 
   List<ui.Rect> get statusValueMasks => <ui.Rect>[
@@ -2254,6 +2228,9 @@ class _GameButton extends PositionComponent with TapCallbacks {
   bool lit = false;
   bool _pressed = false;
   double _time = 0;
+  ui.Image? _offSprite;
+  ui.Image? _onSprite;
+  bool _spriteBuildRequested = false;
 
   @override
   void update(double dt) {
@@ -2278,83 +2255,148 @@ class _GameButton extends PositionComponent with TapCallbacks {
     onPressed();
   }
 
+  Future<void> _buildSprites() async {
+    _offSprite = await _makeSprite(false);
+    _onSprite = await _makeSprite(true);
+  }
+
+  Future<ui.Image> _makeSprite(bool on) async {
+    final w = math.max(64, size.x.round());
+    final h = math.max(40, size.y.round());
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    final rect = ui.Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble());
+
+    final inset = math.max(2.0, w * 0.018);
+    final cut = math.max(5.0, h * 0.14);
+    final outer = ui.Path()
+      ..moveTo(rect.left + inset + cut, rect.top + inset)
+      ..lineTo(rect.right - inset - cut, rect.top + inset)
+      ..lineTo(rect.right - inset, rect.top + inset + cut)
+      ..lineTo(rect.right - inset, rect.bottom - inset - cut)
+      ..lineTo(rect.right - inset - cut, rect.bottom - inset)
+      ..lineTo(rect.left + inset + cut, rect.bottom - inset)
+      ..lineTo(rect.left + inset, rect.bottom - inset - cut)
+      ..lineTo(rect.left + inset, rect.top + inset + cut)
+      ..close();
+
+    canvas.drawPath(
+      outer,
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          rect.topCenter,
+          rect.bottomCenter,
+          const <Color>[
+            Color(0xFF8A6338),
+            Color(0xFF26160E),
+            Color(0xFF6B4A2C),
+          ],
+          const <double>[0.0, 0.55, 1.0],
+        ),
+    );
+    canvas.drawPath(
+      outer,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = math.max(1.0, w * 0.012)
+        ..color = const Color(0xFFD0A45D),
+    );
+
+    final inner = rect.deflate(math.max(5.0, w * 0.045));
+    final innerCut = math.max(3.0, h * 0.10);
+    final face = ui.Path()
+      ..moveTo(inner.left + innerCut, inner.top)
+      ..lineTo(inner.right - innerCut, inner.top)
+      ..lineTo(inner.right, inner.top + innerCut)
+      ..lineTo(inner.right, inner.bottom - innerCut)
+      ..lineTo(inner.right - innerCut, inner.bottom)
+      ..lineTo(inner.left + innerCut, inner.bottom)
+      ..lineTo(inner.left, inner.bottom - innerCut)
+      ..lineTo(inner.left, inner.top + innerCut)
+      ..close();
+
+    final faceColor = on ? const Color(0xFFA61D16) : const Color(0xFF5B201B);
+    canvas.drawPath(face, ui.Paint()..color = faceColor);
+    canvas.drawPath(
+      face,
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = math.max(1.0, w * 0.014)
+        ..color = on ? const Color(0xFFFFA321) : const Color(0xFF9D6C38),
+    );
+
+    if (on) {
+      canvas.drawPath(
+        face,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = math.max(2.0, w * 0.025)
+          ..color = const Color(0x44FF7A00)
+          ..maskFilter = ui.MaskFilter.blur(
+            ui.BlurStyle.normal,
+            math.max(2.0, w * 0.025),
+          ),
+      );
+    }
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: label == 'TRANSFER TO CASH' ? 'TRANSFER\\nTO CASH' : label,
+        style: TextStyle(
+          color: on ? const Color(0xFFFFE7A6) : const Color(0xFFD0BE94),
+          fontWeight: FontWeight.w900,
+          fontSize: h * (label.length > 12 ? 0.18 : label.length > 8 ? 0.22 : 0.30),
+          height: 0.92,
+          shadows: const <Shadow>[
+            Shadow(color: Color(0xFF000000), blurRadius: 2),
+          ],
+        ),
+      ),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: inner.width * 0.88);
+    textPainter.paint(
+      canvas,
+      ui.Offset(
+        rect.center.dx - textPainter.width / 2,
+        rect.center.dy - textPainter.height / 2,
+      ),
+    );
+
+    final picture = recorder.endRecording();
+    return picture.toImage(w, h);
+  }
+
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
     if (size.x <= 0 || size.y <= 0) return;
 
     if (integrated) {
-      final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
-      final outer = rect.deflate(size.x * 0.02);
-      final inner = outer.deflate(size.x * 0.035);
+      if (!_spriteBuildRequested) {
+        _spriteBuildRequested = true;
+        _buildSprites();
+      }
 
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(outer, const ui.Radius.circular(7)),
-        ui.Paint()
-          ..shader = ui.Gradient.linear(
-            outer.topCenter,
-            outer.bottomCenter,
-            const <Color>[
-              Color(0xFF6A4A2A),
-              Color(0xFF24150E),
-              Color(0xFF8B6334),
-            ],
-            const <double>[0.0, 0.58, 1.0],
+      final sprite = enabled && lit ? _onSprite : _offSprite;
+      if (sprite != null) {
+        final dst = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+        canvas.drawImageRect(
+          sprite,
+          ui.Rect.fromLTWH(
+            0,
+            0,
+            sprite.width.toDouble(),
+            sprite.height.toDouble(),
           ),
-      );
-      final faceColor = !enabled
-          ? const Color(0xFF3B1613)
-          : (lit ? const Color(0xFFB62016) : const Color(0xFF711811));
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(inner, const ui.Radius.circular(5)),
-        ui.Paint()..color = faceColor,
-      );
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(inner, const ui.Radius.circular(5)),
-        ui.Paint()
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = math.max(1.0, size.x * 0.012)
-          ..color = lit && enabled
-              ? const Color(0xFFFFA31A)
-              : const Color(0xFFD2A14A),
-      );
-
-      final fontScale = label.length > 12
-          ? 0.075
-          : label.length > 8
-              ? 0.095
-              : 0.15;
-      final p = TextPainter(
-        text: TextSpan(
-          text: label,
-          style: TextStyle(
-            color: enabled
-                ? const Color(0xFFFFE6A8)
-                : const Color(0xFF9B8D78),
-            fontWeight: FontWeight.w900,
-            fontSize: size.x * fontScale,
-            height: 0.95,
-            shadows: lit && enabled
-                ? const <Shadow>[
-                    Shadow(color: Color(0xFFFF6A00), blurRadius: 5),
-                  ]
-                : null,
-          ),
-        ),
-        textAlign: TextAlign.center,
-        textDirection: TextDirection.ltr,
-      )..layout(maxWidth: inner.width * 0.90);
-      p.paint(
-        canvas,
-        ui.Offset(
-          inner.center.dx - p.width / 2,
-          inner.center.dy - p.height / 2,
-        ),
-      );
+          dst,
+          ui.Paint()..filterQuality = ui.FilterQuality.high,
+        );
+      }
       return;
     }
 
-    final press = _pressed ? size.y * 0.11 : 0.0;
+    final press = _pressed    final press = _pressed ? size.y * 0.11 : 0.0;
     final flicker = 0.84 + 0.16 * math.sin(_time * 10.5 + size.x * 0.025);
 
     canvas.save();
