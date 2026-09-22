@@ -2396,7 +2396,7 @@ class _GameButton extends PositionComponent with TapCallbacks {
       return;
     }
 
-    final press = _pressed    final press = _pressed ? size.y * 0.11 : 0.0;
+    final press = _pressed ? size.y * 0.11 : 0.0;
     final flicker = 0.84 + 0.16 * math.sin(_time * 10.5 + size.x * 0.025);
 
     canvas.save();
