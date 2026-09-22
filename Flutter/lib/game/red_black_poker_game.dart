@@ -32,6 +32,7 @@ class RedBlackPokerGame extends FlameGame {
   ui.Image? _bottomPanelArt;
   ui.Image? _controlPanelHeaderArt;
   ui.Image? _horrorCardsAtlas;
+  ui.Image? _masterCabinetArt;
 
   final AutoHoldAdvisor _autoHoldAdvisor = const AutoHoldAdvisor();
   Duration cardDisplayDelay = const Duration(milliseconds: 275);
@@ -103,7 +104,8 @@ class RedBlackPokerGame extends FlameGame {
     _paytableArt = await images.load('paytable_frame.jpg');
     _bottomPanelArt = await images.load('bottom_panel.jpg');
     _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
-    _horrorCardsAtlas = await images.load('horror_cards_atlas.jpg');
+    _masterCabinetArt = await images.load('master_halloween_cabinet.png');
+    _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
 
     for (var i = 0; i < 10; i++) {
       _zombieHeadImages.add(
@@ -127,11 +129,13 @@ class RedBlackPokerGame extends FlameGame {
     }
 
     _mainDrawButton = _GameButton(
+      integrated: true,
       label: 'DRAW',
       accent: const Color(0xFFBD1722),
       onPressed: _mainDrawPressed,
     );
     _betDownButton = _GameButton(
+      integrated: true,
       label: 'BET -',
       accent: const Color(0xFF8E4D0B),
       onPressed: () {
@@ -140,6 +144,7 @@ class RedBlackPokerGame extends FlameGame {
       },
     );
     _betUpButton = _GameButton(
+      integrated: true,
       label: 'BET +',
       accent: const Color(0xFFB46D0B),
       onPressed: () {
@@ -148,6 +153,7 @@ class RedBlackPokerGame extends FlameGame {
       },
     );
     _betMaxButton = _GameButton(
+      integrated: true,
       label: 'BET MAX',
       accent: const Color(0xFFB46D0B),
       onPressed: () {
@@ -162,6 +168,7 @@ class RedBlackPokerGame extends FlameGame {
       },
     );
     _cashOutButton = _GameButton(
+      integrated: true,
       label: 'CASH OUT',
       accent: const Color(0xFF6D4A1C),
       onPressed: () {
@@ -170,6 +177,7 @@ class RedBlackPokerGame extends FlameGame {
       },
     );
     _insertCoinsButton = _GameButton(
+      integrated: true,
       label: 'INSERT COINS',
       accent: const Color(0xFF365A72),
       onPressed: () {
@@ -178,6 +186,7 @@ class RedBlackPokerGame extends FlameGame {
       },
     );
     _refillWalletButton = _GameButton(
+      integrated: true,
       label: 'REFILL WALLET',
       accent: const Color(0xFF7A244F),
       onPressed: () {
@@ -186,11 +195,13 @@ class RedBlackPokerGame extends FlameGame {
       },
     );
     _doubleUpButton = _GameButton(
+      integrated: true,
       label: 'DOUBLE UP',
       accent: const Color(0xFF6E1A91),
       onPressed: _startDoubleUp,
     );
     _collectButton = _GameButton(
+      integrated: true,
       label: 'COLLECT',
       accent: const Color(0xFF207538),
       onPressed: _collectMainWin,
@@ -326,7 +337,7 @@ class RedBlackPokerGame extends FlameGame {
     place(_betDownButton, g.betDownButton);
     place(_betUpButton, g.betUpButton);
     place(_betMaxButton, g.betMaxButton);
-    place(_mainDrawButton, g.mainButton);
+    place(_mainDrawButton, round.canStartHand ? g.dealButton : g.drawButton);
     place(_cashOutButton, g.cashOutButton);
     place(_insertCoinsButton, g.insertCoinsButton);
     place(_refillWalletButton, g.refillWalletButton);
@@ -821,13 +832,133 @@ class RedBlackPokerGame extends FlameGame {
     } else if (_redBlackMode) {
       _renderRedBlack(canvas);
     } else {
-      _renderBackdrop(canvas);
-      _renderZombieCabinet(canvas);
-      _renderPayTable(canvas);
-      _renderControlPanel(canvas);
-      _renderStatus(canvas);
+      _renderMasterCabinet(canvas);
+      _renderMasterDynamic(canvas);
     }
     super.render(canvas);
+  }
+
+  void _renderMasterCabinet(ui.Canvas canvas) {
+    final art = _masterCabinetArt;
+    final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+    if (art == null) {
+      canvas.drawRect(rect, ui.Paint()..color = const Color(0xFF050506));
+      return;
+    }
+
+    canvas.drawImageRect(
+      art,
+      ui.Rect.fromLTWH(
+        0,
+        0,
+        art.width.toDouble(),
+        art.height.toDouble(),
+      ),
+      rect,
+      ui.Paint()..filterQuality = ui.FilterQuality.high,
+    );
+  }
+
+  void _renderMasterDynamic(ui.Canvas canvas) {
+    final g = _geometry;
+
+    // Dim unearned zombie portraits without destroying the built-in cabinet.
+    for (var i = 0; i < g.zombieSlots.length; i++) {
+      final slot = g.zombieSlots[i];
+      final earned = i < round.bonusProgress;
+      if (!earned) {
+        canvas.drawRRect(
+          ui.RRect.fromRectAndRadius(slot.deflate(slot.width * 0.06),
+              const ui.Radius.circular(4)),
+          ui.Paint()..color = const Color(0xB8000000),
+        );
+      } else {
+        final flicker = 0.72 + 0.28 * math.sin(_uiTime * 9 + i * 1.3);
+        final glow = ui.Paint()
+          ..color = const Color(0xFFFF4A24)
+              .withValues(alpha: 0.20 + 0.18 * flicker)
+          ..maskFilter =
+              ui.MaskFilter.blur(ui.BlurStyle.normal, slot.width * 0.10);
+        canvas.drawCircle(
+          ui.Offset(slot.center.dx - slot.width * 0.10,
+              slot.top + slot.height * 0.38),
+          slot.width * 0.055,
+          glow,
+        );
+        canvas.drawCircle(
+          ui.Offset(slot.center.dx + slot.width * 0.10,
+              slot.top + slot.height * 0.38),
+          slot.width * 0.055,
+          glow,
+        );
+      }
+    }
+
+    // Replace baked demo values with live game values.
+    final values = <String>[
+      round.bet.toString(),
+      round.credits.toString(),
+      round.pendingWin.toString(),
+    ];
+    for (var i = 0; i < g.statusValueMasks.length; i++) {
+      final r = g.statusValueMasks[i];
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(r, const ui.Radius.circular(4)),
+        ui.Paint()..color = const Color(0xF2070809),
+      );
+      _paintText(
+        canvas,
+        values[i],
+        r.center,
+        fontSize: size.x * 0.047,
+        color: i == 0 ? const Color(0xFFFF3E3E) : const Color(0xFFFFED52),
+        weight: FontWeight.w900,
+        centered: true,
+      );
+    }
+
+    // Wallet display and bottom accounting strip.
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(g.walletValueMask, const ui.Radius.circular(4)),
+      ui.Paint()..color = const Color(0xF2070809),
+    );
+    _paintText(
+      canvas,
+      round.wallet.toString(),
+      g.walletValueMask.center,
+      fontSize: size.x * 0.045,
+      color: const Color(0xFFFFE05B),
+      weight: FontWeight.w900,
+      centered: true,
+    );
+
+    final bottomValues = <String>[
+      round.bank.toString(),
+      round.wallet.toString(),
+      round.credits.toString(),
+    ];
+    for (var i = 0; i < g.bottomValueMasks.length; i++) {
+      final r = g.bottomValueMasks[i];
+      canvas.drawRect(r, ui.Paint()..color = const Color(0xE9070809));
+      _paintText(
+        canvas,
+        bottomValues[i],
+        r.center,
+        fontSize: size.x * 0.027,
+        color: const Color(0xFFFFE06A),
+        weight: FontWeight.w900,
+        centered: true,
+      );
+    }
+
+    // Background artwork shows DEAL illuminated. Darken it while DRAW is active.
+    if (!round.canStartHand) {
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(g.dealButton.deflate(2),
+            const ui.Radius.circular(8)),
+        ui.Paint()..color = const Color(0x99000000),
+      );
+    }
   }
 
   void _renderSettingsPanel(ui.Canvas canvas) {
@@ -1689,128 +1820,73 @@ class _CabinetGeometry {
   final double w;
   final double h;
 
+  ui.Rect _src(double l, double t, double r, double b) {
+    const sw = 941.0;
+    const sh = 1672.0;
+    return ui.Rect.fromLTRB(
+      w * l / sw,
+      h * t / sh,
+      w * r / sw,
+      h * b / sh,
+    );
+  }
+
   double get side => w * 0.04;
-  double get gap => (w * 0.012).clamp(4.0, 12.0);
-  double get buttonGap => w * 0.014;
+  double get gap => w * 0.012;
+  double get buttonGap => w * 0.012;
 
-  ui.Rect get titleBanner =>
-      ui.Rect.fromLTWH(w * 0.025, h * 0.010, w * 0.95, h * 0.185);
-
-  ui.Rect get zombieFrame =>
-      ui.Rect.fromLTWH(w * 0.035, h * 0.202, w * 0.93, h * 0.092);
-
-  ui.Rect get payTable =>
-      ui.Rect.fromLTWH(w * 0.055, h * 0.302, w * 0.89, h * 0.145);
-
-  double get cardTop => payTable.bottom + h * 0.025;
-  double get cardWidth => ((w * 0.94) - gap * 4) / 5;
-  double get cardHeight => cardWidth * 1.42;
-
-  List<ui.Rect> get cardRects {
-    final total = cardWidth * 5 + gap * 4;
-    final startX = (w - total) / 2;
+  List<ui.Rect> get zombieSlots {
+    final frame = _src(43, 700, 895, 836);
+    final step = frame.width / 10;
     return List<ui.Rect>.generate(
-      5,
+      10,
       (i) => ui.Rect.fromLTWH(
-        startX + i * (cardWidth + gap),
-        cardTop,
-        cardWidth,
-        cardHeight,
+        frame.left + step * i + step * 0.04,
+        frame.top,
+        step * 0.92,
+        frame.height,
       ),
     );
   }
 
-  double get statusTop => cardTop + cardHeight + h * 0.022;
-  double get statusMessageY => cardTop - h * 0.012;
+  List<ui.Rect> get cardRects => <ui.Rect>[
+        _src(40, 886, 196, 1090),
+        _src(204, 886, 370, 1090),
+        _src(378, 886, 546, 1090),
+        _src(550, 886, 716, 1090),
+        _src(722, 886, 890, 1090),
+      ];
 
-  List<ui.Rect> get statusPanels {
-    final width = w * 0.29;
-    final height = h * 0.065;
-    return List<ui.Rect>.generate(
-      3,
-      (i) => ui.Rect.fromLTWH(
-        w * 0.04 + i * (width + w * 0.025),
-        statusTop,
-        width,
-        height,
-      ),
-    );
-  }
+  List<ui.Rect> get statusValueMasks => <ui.Rect>[
+        _src(108, 1142, 212, 1184),
+        _src(404, 1142, 534, 1184),
+        _src(718, 1142, 815, 1184),
+      ];
 
-  double get controlsTop => statusTop + h * 0.072;
-  double get buttonHeight => h * 0.052;
-  double get smallButtonWidth =>
-      (w - side * 2 - buttonGap * 3) / 4;
+  ui.Rect get betDownButton => _src(48, 1197, 168, 1285);
+  ui.Rect get betUpButton => _src(180, 1197, 306, 1285);
+  ui.Rect get betMaxButton => _src(218, 1115, 286, 1144);
+  ui.Rect get dealButton => _src(326, 1194, 616, 1287);
+  ui.Rect get drawButton => _src(632, 1194, 891, 1287);
 
-  ui.Rect get betDownButton =>
-      ui.Rect.fromLTWH(side, controlsTop, smallButtonWidth, buttonHeight);
-  ui.Rect get betUpButton => ui.Rect.fromLTWH(
-        side + smallButtonWidth + buttonGap,
-        controlsTop,
-        smallButtonWidth,
-        buttonHeight,
-      );
-  ui.Rect get betMaxButton => ui.Rect.fromLTWH(
-        side + (smallButtonWidth + buttonGap) * 2,
-        controlsTop,
-        smallButtonWidth,
-        buttonHeight,
-      );
-  ui.Rect get mainButton => ui.Rect.fromLTWH(
-        side + (smallButtonWidth + buttonGap) * 3,
-        controlsTop,
-        smallButtonWidth,
-        buttonHeight,
-      );
+  ui.Rect get cashOutButton => _src(48, 1293, 258, 1367);
+  ui.Rect get insertCoinsButton => _src(661, 1293, 889, 1367);
+  ui.Rect get refillWalletButton => _src(270, 1293, 648, 1367);
+  ui.Rect get walletValueMask => _src(390, 1322, 550, 1361);
 
-  double get lowerTop => controlsTop + buttonHeight + h * 0.012;
-  double get lowerButtonWidth =>
-      (w - side * 2 - buttonGap) / 2;
+  ui.Rect get doubleUpButton => _src(326, 1194, 616, 1287);
+  ui.Rect get collectButton => _src(632, 1194, 891, 1287);
 
-  ui.Rect get cashOutButton =>
-      ui.Rect.fromLTWH(side, lowerTop, lowerButtonWidth, buttonHeight);
-  ui.Rect get insertCoinsButton => ui.Rect.fromLTWH(
-        side + lowerButtonWidth + buttonGap,
-        lowerTop,
-        lowerButtonWidth,
-        buttonHeight,
-      );
-  ui.Rect get refillWalletButton =>
-      ui.Rect.fromLTWH(side, lowerTop, w - side * 2, buttonHeight);
+  List<ui.Rect> get bottomValueMasks => <ui.Rect>[
+        _src(151, 1580, 230, 1620),
+        _src(433, 1580, 560, 1620),
+        _src(760, 1580, 842, 1620),
+      ];
 
-  double get decisionButtonWidth => w * 0.30;
-  double get decisionGap => w * 0.025;
-  double get decisionStart =>
-      w * 0.5 - (decisionButtonWidth * 2 + decisionGap) * 0.5;
+  ui.Rect get settingsButton => _src(862, 30, 930, 105);
 
-  ui.Rect get doubleUpButton => ui.Rect.fromLTWH(
-        decisionStart,
-        controlsTop,
-        decisionButtonWidth,
-        buttonHeight,
-      );
-  ui.Rect get collectButton => ui.Rect.fromLTWH(
-        decisionStart + decisionButtonWidth + decisionGap,
-        controlsTop,
-        decisionButtonWidth,
-        buttonHeight,
-      );
-
-  ui.Rect get settingsButton =>
-      ui.Rect.fromLTWH(w * 0.885, h * 0.012, w * 0.08, h * 0.04);
-
-  ui.Rect get controlPanel =>
-      ui.Rect.fromLTWH(w * 0.025, statusTop + h * 0.064, w * 0.95, h * 0.172);
-
-  ui.Rect get bottomArt =>
-      ui.Rect.fromLTWH(w * 0.035, h * 0.835, w * 0.93, h * 0.135);
-
-  ui.Rect get walletStrip => ui.Rect.fromLTWH(
-        controlPanel.left + w * 0.03,
-        controlPanel.bottom - h * 0.042,
-        controlPanel.width - w * 0.06,
-        h * 0.034,
-      );
+  ui.Rect get controlPanel => _src(45, 1110, 891, 1369);
+  ui.Rect get walletStrip => _src(270, 1293, 648, 1367);
 
   ui.Rect get settingsPanel =>
       ui.Rect.fromLTWH(w * 0.07, h * 0.07, w * 0.86, h * 0.80);
@@ -1872,10 +1948,11 @@ class _CardView extends PositionComponent with TapCallbacks {
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
-    final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(rect, ui.Radius.circular(size.x * 0.055)),
-      ui.Paint()..color = const Color(0xFFF4F0E6),
+    final faceRect = ui.Rect.fromLTWH(
+      size.x * 0.075,
+      size.y * 0.025,
+      size.x * 0.85,
+      size.y * 0.76,
     );
 
     if (faceAtlas != null) {
@@ -1890,7 +1967,7 @@ class _CardView extends PositionComponent with TapCallbacks {
       canvas.drawImageRect(
         faceAtlas!,
         src,
-        rect,
+        faceRect,
         ui.Paint()..filterQuality = ui.FilterQuality.high,
       );
     } else if (cardImage != null) {
@@ -1902,7 +1979,7 @@ class _CardView extends PositionComponent with TapCallbacks {
           cardImage!.width.toDouble(),
           cardImage!.height.toDouble(),
         ),
-        rect,
+        faceRect,
         ui.Paint()..filterQuality = ui.FilterQuality.high,
       );
     } else if (backImage != null) {
@@ -1914,31 +1991,39 @@ class _CardView extends PositionComponent with TapCallbacks {
           backImage!.width.toDouble(),
           backImage!.height.toDouble(),
         ),
-        rect,
+        faceRect,
         ui.Paint()..filterQuality = ui.FilterQuality.high,
       );
-    } else {
-      _renderHalloweenBack(canvas, rect);
     }
 
     if (held || winning) {
-      final holdRect = ui.Rect.fromLTWH(0, size.y * 0.79, size.x, size.y * 0.21);
-      canvas.drawRect(holdRect, ui.Paint()..color = const Color(0xE80B0B0D));
+      final holdRect =
+          ui.Rect.fromLTWH(size.x * 0.08, size.y * 0.80, size.x * 0.84, size.y * 0.15);
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(holdRect, const ui.Radius.circular(5)),
+        ui.Paint()
+          ..color = winning
+              ? const Color(0xDFA30D14)
+              : const Color(0xDFA55E0A),
+      );
       final painter = TextPainter(
         text: TextSpan(
           text: winning ? 'WIN' : 'HOLD',
           style: TextStyle(
-            color: winning ? const Color(0xFFFF4D4D) : const Color(0xFFFFC85A),
+            color: const Color(0xFFFFE6A0),
             fontWeight: FontWeight.w900,
-            fontSize: size.x * 0.16,
+            fontSize: size.x * 0.14,
           ),
         ),
         textAlign: TextAlign.center,
         textDirection: TextDirection.ltr,
-      )..layout(maxWidth: size.x);
+      )..layout(maxWidth: holdRect.width);
       painter.paint(
         canvas,
-        ui.Offset((size.x - painter.width) / 2, size.y * 0.84 - painter.height / 2),
+        ui.Offset(
+          holdRect.center.dx - painter.width / 2,
+          holdRect.center.dy - painter.height / 2,
+        ),
       );
     }
   }
@@ -2097,11 +2182,13 @@ class _GameButton extends PositionComponent with TapCallbacks {
     required this.label,
     required this.accent,
     required this.onPressed,
+    this.integrated = false,
   });
 
   String label;
   Color accent;
   final VoidCallback onPressed;
+  final bool integrated;
   bool enabled = true;
   bool lit = false;
   bool _pressed = false;
@@ -2134,6 +2221,59 @@ class _GameButton extends PositionComponent with TapCallbacks {
   void render(ui.Canvas canvas) {
     super.render(canvas);
     if (size.x <= 0 || size.y <= 0) return;
+
+    if (integrated) {
+      final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+      final pressedOffset = _pressed ? size.y * 0.05 : 0.0;
+      canvas.save();
+      canvas.translate(0, pressedOffset);
+
+      if (!enabled) {
+        canvas.drawRRect(
+          ui.RRect.fromRectAndRadius(rect.deflate(2), const ui.Radius.circular(7)),
+          ui.Paint()..color = const Color(0x77000000),
+        );
+      } else if (lit) {
+        canvas.drawRRect(
+          ui.RRect.fromRectAndRadius(rect.deflate(2), const ui.Radius.circular(7)),
+          ui.Paint()
+            ..color = accent.withValues(alpha: _pressed ? 0.34 : 0.18)
+            ..maskFilter =
+                ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.025),
+        );
+      }
+
+      // BET +/-/MAX need live labels because the approved background has old labels.
+      if (label == 'BET -' || label == 'BET +' || label == 'BET MAX') {
+        canvas.drawRRect(
+          ui.RRect.fromRectAndRadius(rect.deflate(3), const ui.Radius.circular(6)),
+          ui.Paint()..color = const Color(0xB5270608),
+        );
+        final p = TextPainter(
+          text: TextSpan(
+            text: label,
+            style: TextStyle(
+              color: enabled
+                  ? const Color(0xFFFFE4A0)
+                  : const Color(0xFF777777),
+              fontWeight: FontWeight.w900,
+              fontSize: size.x * (label == 'BET MAX' ? 0.14 : 0.18),
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: rect.width * 0.9);
+        p.paint(
+          canvas,
+          ui.Offset(
+            rect.center.dx - p.width / 2,
+            rect.center.dy - p.height / 2,
+          ),
+        );
+      }
+
+      canvas.restore();
+      return;
+    }
 
     final press = _pressed ? size.y * 0.11 : 0.0;
     final flicker = 0.84 + 0.16 * math.sin(_time * 10.5 + size.x * 0.025);
