@@ -33,6 +33,8 @@ class RedBlackPokerGame extends FlameGame {
   ui.Image? _controlPanelHeaderArt;
   ui.Image? _horrorCardsAtlas;
   ui.Image? _masterCabinetArt;
+  ui.Image? _zombieProgressAtlas;
+  ui.Image? _halloweenButtonsAtlas;
 
   final AutoHoldAdvisor _autoHoldAdvisor = const AutoHoldAdvisor();
   Duration cardDisplayDelay = const Duration(milliseconds: 275);
@@ -104,8 +106,10 @@ class RedBlackPokerGame extends FlameGame {
     _paytableArt = await images.load('paytable_frame.jpg');
     _bottomPanelArt = await images.load('bottom_panel.jpg');
     _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
-    _masterCabinetArt = await images.load('master_halloween_blank.jpg');
+    _masterCabinetArt = await images.load('master_halloween_cabinet_v2.png');
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
+    _zombieProgressAtlas = await images.load('zombie_progress_atlas.png');
+    _halloweenButtonsAtlas = await images.load('halloween_buttons_atlas.png');
 
     for (var i = 0; i < 10; i++) {
       _zombieHeadImages.add(
@@ -138,11 +142,17 @@ class RedBlackPokerGame extends FlameGame {
       label: 'DRAW',
       accent: const Color(0xFFBD1722),
       onPressed: _mainDrawPressed,
+      spriteAtlas: _halloweenButtonsAtlas,
+      offSrc: const ui.Rect.fromLTWH(8, 270, 250, 82),
+      onSrc: const ui.Rect.fromLTWH(286, 270, 250, 82),
     );
     _betDownButton = _GameButton(
       integrated: true,
       label: 'BET -',
       accent: const Color(0xFF8E4D0B),
+      spriteAtlas: _halloweenButtonsAtlas,
+      offSrc: const ui.Rect.fromLTWH(8, 8, 128, 78),
+      onSrc: const ui.Rect.fromLTWH(286, 8, 128, 78),
       onPressed: () {
         round.changeBet(-1);
         _syncView();
@@ -152,6 +162,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'BET +',
       accent: const Color(0xFFB46D0B),
+      spriteAtlas: _halloweenButtonsAtlas,
+      offSrc: const ui.Rect.fromLTWH(8, 94, 128, 78),
+      onSrc: const ui.Rect.fromLTWH(286, 94, 128, 78),
       onPressed: () {
         round.changeBet(1);
         _syncView();
@@ -161,6 +174,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'TRANSFER TO CASH',
       accent: const Color(0xFF8E4D0B),
+      spriteAtlas: _halloweenButtonsAtlas,
+      offSrc: const ui.Rect.fromLTWH(8, 180, 270, 82),
+      onSrc: const ui.Rect.fromLTWH(286, 180, 270, 82),
       onPressed: () {
         round.transferToCash();
         _syncView();
@@ -170,6 +186,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'CASH OUT',
       accent: const Color(0xFF6D4A1C),
+      spriteAtlas: _halloweenButtonsAtlas,
+      offSrc: const ui.Rect.fromLTWH(8, 360, 205, 75),
+      onSrc: const ui.Rect.fromLTWH(286, 360, 205, 75),
       onPressed: () {
         round.cashOut();
         _syncView();
@@ -179,6 +198,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'ADD MONEY',
       accent: const Color(0xFF365A72),
+      spriteAtlas: _halloweenButtonsAtlas,
+      offSrc: const ui.Rect.fromLTWH(8, 443, 205, 75),
+      onSrc: const ui.Rect.fromLTWH(286, 443, 205, 75),
       onPressed: () {
         round.addMoney();
         _syncView();
@@ -855,38 +877,21 @@ class RedBlackPokerGame extends FlameGame {
   void _renderMasterDynamic(ui.Canvas canvas) {
     final g = _geometry;
 
-    _renderPayTable(canvas);
 
-    // Dim unearned zombie portraits without destroying the built-in cabinet.
-    for (var i = 0; i < g.zombieSlots.length; i++) {
-      final slot = g.zombieSlots[i];
-      final earned = i < round.bonusProgress;
-      if (!earned) {
-        canvas.drawRRect(
-          ui.RRect.fromRectAndRadius(slot.deflate(slot.width * 0.06),
-              const ui.Radius.circular(4)),
-          ui.Paint()..color = const Color(0xB8000000),
-        );
-      } else {
-        final flicker = 0.72 + 0.28 * math.sin(_uiTime * 9 + i * 1.3);
-        final glow = ui.Paint()
-          ..color = const Color(0xFFFF4A24)
-              .withValues(alpha: 0.20 + 0.18 * flicker)
-          ..maskFilter =
-              ui.MaskFilter.blur(ui.BlurStyle.normal, slot.width * 0.10);
-        canvas.drawCircle(
-          ui.Offset(slot.center.dx - slot.width * 0.10,
-              slot.top + slot.height * 0.38),
-          slot.width * 0.055,
-          glow,
-        );
-        canvas.drawCircle(
-          ui.Offset(slot.center.dx + slot.width * 0.10,
-              slot.top + slot.height * 0.38),
-          slot.width * 0.055,
-          glow,
-        );
-      }
+    // Swap the entire zombie strip as progress changes.  State 0 is all dark,
+    // state 1 reveals head 1, ... state 10 reveals all ten.
+    final zombieAtlas = _zombieProgressAtlas;
+    if (zombieAtlas != null) {
+      final state = round.bonusProgress.clamp(0, 10);
+      const stripW = 827.0;
+      const stripH = 144.0;
+      final src = ui.Rect.fromLTWH(0, state * stripH, stripW, stripH);
+      canvas.drawImageRect(
+        zombieAtlas,
+        src,
+        g.zombieProgressStrip,
+        ui.Paint()..filterQuality = ui.FilterQuality.high,
+      );
     }
 
     // Only live values belong in these three upper readouts.
@@ -923,7 +928,6 @@ class RedBlackPokerGame extends FlameGame {
       centered: true,
     );
 
-    final bottomLabels = <String>['BANK', 'WALLET', 'MACHINE'];
     final bottomValues = <String>[
       round.totalFunds.toString(),
       round.wallet.toString(),
@@ -934,19 +938,10 @@ class RedBlackPokerGame extends FlameGame {
       _paintText(
         canvas,
         bottomValues[i],
-        ui.Offset(r.center.dx, r.top + r.height * 0.42),
+        ui.Offset(r.center.dx, r.top + r.height * 0.40),
         fontSize: size.x * 0.027,
         color: const Color(0xFFFFE06A),
         weight: FontWeight.w900,
-        centered: true,
-      );
-      _paintText(
-        canvas,
-        bottomLabels[i],
-        ui.Offset(r.center.dx, r.top + r.height * 0.78),
-        fontSize: size.x * 0.015,
-        color: const Color(0xFFC9A96A),
-        weight: FontWeight.w800,
         centered: true,
       );
     }
@@ -1826,15 +1821,17 @@ class _CabinetGeometry {
   double get gap => w * 0.012;
   double get buttonGap => w * 0.012;
 
+  ui.Rect get zombieProgressStrip => _src(39, 744, 866, 888);
+
   List<ui.Rect> get zombieSlots {
-    final frame = _src(48, 752, 857, 888);
+    final frame = zombieProgressStrip;
     final step = frame.width / 10;
     return List<ui.Rect>.generate(
       10,
       (i) => ui.Rect.fromLTWH(
-        frame.left + step * i + step * 0.04,
+        frame.left + step * i,
         frame.top,
-        step * 0.92,
+        step,
         frame.height,
       ),
     );
@@ -1862,16 +1859,16 @@ class _CabinetGeometry {
   //   1) BET- and BET+ share the first slot
   //   2) TRANSFER TO CASH fills the second slot
   //   3) DRAW fills the third slot
-  ui.Rect get betDownButton => _src(58, 1232, 174, 1310);
-  ui.Rect get betUpButton => _src(184, 1232, 300, 1310);
-  ui.Rect get dealButton => _src(320, 1230, 585, 1312);
-  ui.Rect get betMaxButton => _src(603, 1230, 850, 1312);
+  ui.Rect get betDownButton => _src(52, 1195, 180, 1273);
+  ui.Rect get betUpButton => _src(184, 1195, 312, 1273);
+  ui.Rect get dealButton => _src(326, 1193, 596, 1275);
+  ui.Rect get betMaxButton => _src(612, 1193, 862, 1275);
   ui.Rect get drawButton => betMaxButton;
 
-  ui.Rect get cashOutButton => _src(58, 1322, 250, 1395);
-  ui.Rect get insertCoinsButton => _src(655, 1322, 850, 1395);
-  ui.Rect get refillWalletButton => _src(270, 1322, 635, 1395);
-  ui.Rect get walletValueMask => _src(300, 1324, 605, 1392);
+  ui.Rect get cashOutButton => _src(55, 1286, 260, 1361);
+  ui.Rect get insertCoinsButton => _src(645, 1286, 850, 1361);
+  ui.Rect get refillWalletButton => _src(285, 1288, 620, 1360);
+  ui.Rect get walletValueMask => _src(310, 1288, 595, 1360);
 
   ui.Rect get doubleUpButton => _src(326, 1194, 616, 1287);
   ui.Rect get collectButton => _src(632, 1194, 891, 1287);
@@ -2234,19 +2231,22 @@ class _GameButton extends PositionComponent with TapCallbacks {
     required this.accent,
     required this.onPressed,
     this.integrated = false,
+    this.spriteAtlas,
+    this.offSrc,
+    this.onSrc,
   });
 
   String label;
   Color accent;
   final VoidCallback onPressed;
   final bool integrated;
+  final ui.Image? spriteAtlas;
+  final ui.Rect? offSrc;
+  final ui.Rect? onSrc;
   bool enabled = true;
   bool lit = false;
   bool _pressed = false;
   double _time = 0;
-  ui.Image? _offSprite;
-  ui.Image? _onSprite;
-  bool _spriteBuildRequested = false;
 
   @override
   void update(double dt) {
@@ -2271,140 +2271,25 @@ class _GameButton extends PositionComponent with TapCallbacks {
     onPressed();
   }
 
-  Future<void> _buildSprites() async {
-    _offSprite = await _makeSprite(false);
-    _onSprite = await _makeSprite(true);
-  }
-
-  Future<ui.Image> _makeSprite(bool on) async {
-    final w = math.max(64, size.x.round());
-    final h = math.max(40, size.y.round());
-    final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(recorder);
-    final rect = ui.Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble());
-
-    final inset = math.max(2.0, w * 0.018);
-    final cut = math.max(5.0, h * 0.14);
-    final outer = ui.Path()
-      ..moveTo(rect.left + inset + cut, rect.top + inset)
-      ..lineTo(rect.right - inset - cut, rect.top + inset)
-      ..lineTo(rect.right - inset, rect.top + inset + cut)
-      ..lineTo(rect.right - inset, rect.bottom - inset - cut)
-      ..lineTo(rect.right - inset - cut, rect.bottom - inset)
-      ..lineTo(rect.left + inset + cut, rect.bottom - inset)
-      ..lineTo(rect.left + inset, rect.bottom - inset - cut)
-      ..lineTo(rect.left + inset, rect.top + inset + cut)
-      ..close();
-
-    canvas.drawPath(
-      outer,
-      ui.Paint()
-        ..shader = ui.Gradient.linear(
-          rect.topCenter,
-          rect.bottomCenter,
-          const <Color>[
-            Color(0xFF8A6338),
-            Color(0xFF26160E),
-            Color(0xFF6B4A2C),
-          ],
-          const <double>[0.0, 0.55, 1.0],
-        ),
-    );
-    canvas.drawPath(
-      outer,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = math.max(1.0, w * 0.012)
-        ..color = const Color(0xFFD0A45D),
-    );
-
-    final inner = rect.deflate(math.max(5.0, w * 0.045));
-    final innerCut = math.max(3.0, h * 0.10);
-    final face = ui.Path()
-      ..moveTo(inner.left + innerCut, inner.top)
-      ..lineTo(inner.right - innerCut, inner.top)
-      ..lineTo(inner.right, inner.top + innerCut)
-      ..lineTo(inner.right, inner.bottom - innerCut)
-      ..lineTo(inner.right - innerCut, inner.bottom)
-      ..lineTo(inner.left + innerCut, inner.bottom)
-      ..lineTo(inner.left, inner.bottom - innerCut)
-      ..lineTo(inner.left, inner.top + innerCut)
-      ..close();
-
-    final faceColor = on ? const Color(0xFFA61D16) : const Color(0xFF5B201B);
-    canvas.drawPath(face, ui.Paint()..color = faceColor);
-    canvas.drawPath(
-      face,
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = math.max(1.0, w * 0.014)
-        ..color = on ? const Color(0xFFFFA321) : const Color(0xFF9D6C38),
-    );
-
-    if (on) {
-      canvas.drawPath(
-        face,
-        ui.Paint()
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = math.max(2.0, w * 0.025)
-          ..color = const Color(0x44FF7A00)
-          ..maskFilter = ui.MaskFilter.blur(
-            ui.BlurStyle.normal,
-            math.max(2.0, w * 0.025),
-          ),
-      );
-    }
-
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: label == 'TRANSFER TO CASH' ? 'TRANSFER\\nTO CASH' : label,
-        style: TextStyle(
-          color: on ? const Color(0xFFFFE7A6) : const Color(0xFFD0BE94),
-          fontWeight: FontWeight.w900,
-          fontSize: h * (label.length > 12 ? 0.18 : label.length > 8 ? 0.22 : 0.30),
-          height: 0.92,
-          shadows: const <Shadow>[
-            Shadow(color: Color(0xFF000000), blurRadius: 2),
-          ],
-        ),
-      ),
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: inner.width * 0.88);
-    textPainter.paint(
-      canvas,
-      ui.Offset(
-        rect.center.dx - textPainter.width / 2,
-        rect.center.dy - textPainter.height / 2,
-      ),
-    );
-
-    final picture = recorder.endRecording();
-    return picture.toImage(w, h);
-  }
-
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
     if (size.x <= 0 || size.y <= 0) return;
 
     if (integrated) {
-      if (!_spriteBuildRequested) {
-        _spriteBuildRequested = true;
-        _buildSprites();
-      }
-
-      final sprite = enabled && lit ? _onSprite : _offSprite;
-      if (sprite != null) {
-        final dst = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+      final atlas = spriteAtlas;
+      final src = enabled && lit ? onSrc : offSrc;
+      if (atlas != null && src != null) {
+        final target = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+        final scale = math.min(target.width / src.width, target.height / src.height);
+        final dst = ui.Rect.fromCenter(
+          center: target.center,
+          width: src.width * scale,
+          height: src.height * scale,
+        );
         canvas.drawImageRect(
-          sprite,
-          ui.Rect.fromLTWH(
-            0,
-            0,
-            sprite.width.toDouble(),
-            sprite.height.toDouble(),
-          ),
+          atlas,
+          src,
           dst,
           ui.Paint()..filterQuality = ui.FilterQuality.high,
         );
