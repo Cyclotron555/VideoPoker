@@ -107,7 +107,7 @@ class RedBlackPokerGame extends FlameGame {
     _paytableArt = await images.load('paytable_frame.jpg');
     _bottomPanelArt = await images.load('bottom_panel.jpg');
     _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
-    _masterCabinetArt = await images.load('master_halloween_cabinet_v3.png');
+    _masterCabinetArt = await images.load('master_halloween_cabinet_v5.png');
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
     _zombieProgressAtlas = await images.load('zombie_progress_atlas.png');
     _halloweenButtonsAtlas = await images.load('halloween_buttons_atlas.png');
@@ -2042,10 +2042,10 @@ class _CardView extends PositionComponent with TapCallbacks {
     // The component covers the whole illustrated card well. Keep artwork inside
     // the inner portrait window so the cabinet frame and baked HOLD plate remain visible.
     final faceRect = ui.Rect.fromLTWH(
-      size.x * 0.085,
-      size.y * 0.035,
-      size.x * 0.83,
-      size.y * 0.735,
+      size.x * 0.035,
+      size.y * 0.015,
+      size.x * 0.93,
+      size.y * 0.79,
     );
 
     if (faceAtlas != null) {
