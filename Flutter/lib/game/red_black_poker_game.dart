@@ -678,10 +678,9 @@ class RedBlackPokerGame extends FlameGame {
     _mainDrawButton.enabled =
         round.canPressMainDraw && !_isAnimatingCards;
     _mainDrawButton.lit = _mainDrawButton.enabled;
-    _mainDrawButton.label = round.canStartHand ? 'DEAL' : 'DRAW';
-    _mainDrawButton.accent = round.canStartHand
-        ? const Color(0xFF23853A)
-        : const Color(0xFF175C8F);
+    // The original game has one DRAW button for both stages of the hand.
+    _mainDrawButton.label = 'DRAW';
+    _mainDrawButton.accent = const Color(0xFFBD1722);
     final moneyControls = !_isAnimatingCards && round.canAdjustMoney;
     _betDownButton.enabled = moneyControls && round.bet > 1;
     _betUpButton.enabled = moneyControls && round.bet < 5;
@@ -893,7 +892,29 @@ class RedBlackPokerGame extends FlameGame {
       }
     }
 
-    // Replace baked demo values with live game values.
+    // Replace the baked status captions and demo values.  Mask only the
+    // caption/value interiors so the illustrated brass frames stay untouched.
+    final statusLabels = <String>['BET', 'CASH', 'WIN'];
+    for (var i = 0; i < g.statusPanels.length; i++) {
+      final panel = g.statusPanels[i];
+      final labelPatch = ui.Rect.fromLTRB(
+        panel.left + panel.width * 0.16,
+        panel.top + panel.height * 0.05,
+        panel.right - panel.width * 0.16,
+        panel.top + panel.height * 0.38,
+      );
+      canvas.drawRect(labelPatch, ui.Paint()..color = const Color(0xF2070809));
+      _paintText(
+        canvas,
+        statusLabels[i],
+        labelPatch.center,
+        fontSize: size.x * 0.018,
+        color: const Color(0xFFC9A96A),
+        weight: FontWeight.w800,
+        centered: true,
+      );
+    }
+
     final values = <String>[
       round.bet.toString(),
       round.cash.toString(),
