@@ -1849,12 +1849,16 @@ class _CabinetGeometry {
     );
   }
 
+  // Keep all five live card components the same size and centered over the
+  // five illustrated cabinet wells.  The previous hand-tuned rectangles had
+  // slightly different widths, which made the card faces look progressively
+  // misaligned across the row.
   List<ui.Rect> get cardRects => <ui.Rect>[
-        _src(40, 886, 196, 1090),
-        _src(204, 886, 370, 1090),
-        _src(378, 886, 546, 1090),
-        _src(550, 886, 716, 1090),
-        _src(722, 886, 890, 1090),
+        _src(40, 886, 198, 1090),
+        _src(212, 886, 370, 1090),
+        _src(384, 886, 542, 1090),
+        _src(556, 886, 714, 1090),
+        _src(728, 886, 886, 1090),
       ];
 
   List<ui.Rect> get statusValueMasks => <ui.Rect>[
@@ -2269,76 +2273,9 @@ class _GameButton extends PositionComponent with TapCallbacks {
     if (size.x <= 0 || size.y <= 0) return;
 
     if (integrated) {
-      final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
-      final insetX = size.x * 0.075;
-      final insetY = size.y * 0.16;
-      final face = ui.Rect.fromLTRB(
-        rect.left + insetX,
-        rect.top + insetY,
-        rect.right - insetX,
-        rect.bottom - insetY,
-      );
-      final pressedOffset = _pressed ? size.y * 0.035 : 0.0;
-      canvas.save();
-      canvas.translate(0, pressedOffset);
-
-      // Only repaint the inner face. The ornate frame belongs to the master
-      // cabinet artwork and must remain untouched.
-      final base = !enabled
-          ? const Color(0xFF17181B)
-          : Color.lerp(accent, Colors.black, lit ? 0.24 : 0.50)!;
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(face, const ui.Radius.circular(5)),
-        ui.Paint()..color = base,
-      );
-
-      if (enabled && lit) {
-        canvas.drawRRect(
-          ui.RRect.fromRectAndRadius(face, const ui.Radius.circular(5)),
-          ui.Paint()
-            ..color = accent.withValues(alpha: _pressed ? 0.30 : 0.16)
-            ..maskFilter =
-                ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.018),
-        );
-      }
-
-      final fontScale = label.length > 11
-          ? 0.090
-          : label.length > 8
-              ? 0.105
-              : label.length > 5
-                  ? 0.125
-                  : 0.16;
-      final p = TextPainter(
-        text: TextSpan(
-          text: label,
-          style: TextStyle(
-            color: enabled
-                ? const Color(0xFFFFE6A8)
-                : const Color(0xFF77787B),
-            fontWeight: FontWeight.w900,
-            fontSize: size.x * fontScale,
-            shadows: enabled && lit
-                ? <Shadow>[
-                    Shadow(
-                      color: accent.withValues(alpha: 0.65),
-                      blurRadius: 4,
-                    ),
-                  ]
-                : null,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout(maxWidth: face.width * 0.94);
-      p.paint(
-        canvas,
-        ui.Offset(
-          face.center.dx - p.width / 2,
-          face.center.dy - p.height / 2,
-        ),
-      );
-
-      canvas.restore();
+      // The cabinet artwork already contains the visible control faces.
+      // Integrated components are hit targets only; drawing another button here
+      // creates the obvious "button on top of a button" look.
       return;
     }
 
