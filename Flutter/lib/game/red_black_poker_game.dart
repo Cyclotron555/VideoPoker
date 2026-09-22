@@ -2270,46 +2270,45 @@ class _GameButton extends PositionComponent with TapCallbacks {
 
     if (integrated) {
       final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
-      final pressedOffset = _pressed ? size.y * 0.05 : 0.0;
+      final insetX = size.x * 0.075;
+      final insetY = size.y * 0.16;
+      final face = ui.Rect.fromLTRB(
+        rect.left + insetX,
+        rect.top + insetY,
+        rect.right - insetX,
+        rect.bottom - insetY,
+      );
+      final pressedOffset = _pressed ? size.y * 0.035 : 0.0;
       canvas.save();
       canvas.translate(0, pressedOffset);
 
-      // Fully cover the baked demo text/state so nothing ghosts through.
+      // Only repaint the inner face. The ornate frame belongs to the master
+      // cabinet artwork and must remain untouched.
       final base = !enabled
           ? const Color(0xFF17181B)
-          : Color.lerp(accent, Colors.black, lit ? 0.22 : 0.48)!;
+          : Color.lerp(accent, Colors.black, lit ? 0.24 : 0.50)!;
       canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(rect.deflate(3), const ui.Radius.circular(7)),
+        ui.RRect.fromRectAndRadius(face, const ui.Radius.circular(5)),
         ui.Paint()..color = base,
       );
 
       if (enabled && lit) {
         canvas.drawRRect(
-          ui.RRect.fromRectAndRadius(rect.deflate(2), const ui.Radius.circular(7)),
+          ui.RRect.fromRectAndRadius(face, const ui.Radius.circular(5)),
           ui.Paint()
-            ..color = accent.withValues(alpha: _pressed ? 0.42 : 0.25)
+            ..color = accent.withValues(alpha: _pressed ? 0.30 : 0.16)
             ..maskFilter =
-                ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.028),
+                ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.018),
         );
       }
 
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(rect.deflate(3), const ui.Radius.circular(7)),
-        ui.Paint()
-          ..style = ui.PaintingStyle.stroke
-          ..strokeWidth = 1.4
-          ..color = enabled
-              ? const Color(0xFFD49A42)
-              : const Color(0xFF5A5B5E),
-      );
-
       final fontScale = label.length > 11
-          ? 0.095
+          ? 0.090
           : label.length > 8
-              ? 0.115
+              ? 0.105
               : label.length > 5
-                  ? 0.14
-                  : 0.18;
+                  ? 0.125
+                  : 0.16;
       final p = TextPainter(
         text: TextSpan(
           text: label,
@@ -2322,20 +2321,20 @@ class _GameButton extends PositionComponent with TapCallbacks {
             shadows: enabled && lit
                 ? <Shadow>[
                     Shadow(
-                      color: accent.withValues(alpha: 0.75),
-                      blurRadius: 5,
+                      color: accent.withValues(alpha: 0.65),
+                      blurRadius: 4,
                     ),
                   ]
                 : null,
           ),
         ),
         textDirection: TextDirection.ltr,
-      )..layout(maxWidth: rect.width * 0.88);
+      )..layout(maxWidth: face.width * 0.94);
       p.paint(
         canvas,
         ui.Offset(
-          rect.center.dx - p.width / 2,
-          rect.center.dy - p.height / 2,
+          face.center.dx - p.width / 2,
+          face.center.dy - p.height / 2,
         ),
       );
 
