@@ -917,38 +917,63 @@ class RedBlackPokerGame extends FlameGame {
         ),
     );
 
-    // One clean backing panel behind the six framed controls.  No individual
-    // button wells are drawn here because every approved button sprite already
-    // contains its own complete gothic frame.
+    // Fully cover the legacy control artwork before the live button sprites.
+    // This panel is deliberately opaque so no old button text/frames can bleed
+    // through behind the approved sprites.
     final controlBacking = g.controlClusterFrame;
     canvas.drawRRect(
       ui.RRect.fromRectAndRadius(
         controlBacking,
-        const ui.Radius.circular(7),
+        const ui.Radius.circular(8),
       ),
       ui.Paint()
         ..shader = ui.Gradient.linear(
           controlBacking.topCenter,
           controlBacking.bottomCenter,
           const <Color>[
-            Color(0xFF111216),
-            Color(0xFF050608),
+            Color(0xFF171410),
+            Color(0xFF050506),
+            Color(0xFF0B0908),
           ],
+          const <double>[0.0, 0.55, 1.0],
         ),
     );
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(
-        controlBacking,
-        const ui.Radius.circular(7),
-      ),
-      ui.Paint()
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = math.max(1.2, size.x * 0.003)
-        ..color = const Color(0xFF6F4B28),
-    );
 
+    // Gothic outer / inner metal rails.
+    for (final inset in <double>[0.0, 4.0, 8.0]) {
+      final r = controlBacking.deflate(inset);
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(
+          r,
+          ui.Radius.circular(math.max(2.0, 8.0 - inset * 0.4)),
+        ),
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = inset == 0.0
+              ? math.max(2.0, size.x * 0.004)
+              : math.max(1.0, size.x * 0.0022)
+          ..color = inset == 0.0
+              ? const Color(0xFF7E5A34)
+              : inset == 4.0
+                  ? const Color(0xFF2B1C12)
+                  : const Color(0xFFB1844C),
+      );
+    }
 
-    _renderPayoutValues(canvas);
+    // Small gothic corner studs/skulls keep the frame visually connected to
+    // the cabinet without adding another button layer.
+    final studPaint = ui.Paint()..color = const Color(0xFF9B7648);
+    final studR = math.max(2.5, size.x * 0.006);
+    for (final p in <ui.Offset>[
+      ui.Offset(controlBacking.left + studR * 2.2, controlBacking.top + studR * 2.2),
+      ui.Offset(controlBacking.right - studR * 2.2, controlBacking.top + studR * 2.2),
+      ui.Offset(controlBacking.left + studR * 2.2, controlBacking.bottom - studR * 2.2),
+      ui.Offset(controlBacking.right - studR * 2.2, controlBacking.bottom - studR * 2.2),
+    ]) {
+      canvas.drawCircle(p, studR, studPaint);
+    }
+
+    _renderPayoutTable(canvas);
 
     // Swap the entire zombie strip as progress changes.  State 0 is all dark,
     // state 1 reveals head 1, ... state 10 reveals all ten.
@@ -1013,15 +1038,46 @@ class RedBlackPokerGame extends FlameGame {
     }
   }
 
-  void _renderPayoutValues(ui.Canvas canvas) {
-    // Hand names are baked permanently into the cabinet artwork.
-    // Only these payout numbers change with the selected bet.
+  void _renderPayoutTable(ui.Canvas canvas) {
+    final g = _geometry;
+    final table = g.payTableTextArea;
+
+    // Hide any old baked text/numbers but preserve the outer parchment frame.
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(table, const ui.Radius.circular(4)),
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          table.topCenter,
+          table.bottomCenter,
+          const <Color>[
+            Color(0xFFE8C98E),
+            Color(0xFFD9B779),
+            Color(0xFFE6C688),
+          ],
+          const <double>[0.0, 0.55, 1.0],
+        ),
+    );
+
+    const leftLabels = <String>[
+      'FIVE OF A KIND',
+      'ROYAL FLUSH',
+      'STRAIGHT FLUSH',
+      'FOUR OF A KIND',
+      'FULL HOUSE',
+    ];
     const leftRanks = <HandRank>[
       HandRank.fiveOfAKind,
       HandRank.royalFlush,
       HandRank.straightFlush,
       HandRank.fourOfAKind,
       HandRank.fullHouse,
+    ];
+    const rightLabels = <String>[
+      'FLUSH',
+      'STRAIGHT',
+      'THREE OF A KIND',
+      'TWO PAIR',
+      'JACKS OR BETTER',
     ];
     const rightRanks = <HandRank>[
       HandRank.flush,
@@ -1031,40 +1087,48 @@ class RedBlackPokerGame extends FlameGame {
       HandRank.none,
     ];
 
-    final g = _geometry;
     for (var row = 0; row < 5; row++) {
       final y = g.payoutRowY(row);
+
+      _paintText(
+        canvas,
+        leftLabels[row],
+        ui.Offset(g.leftPayoutLabelX, y),
+        fontSize: size.x * 0.022,
+        color: const Color(0xFF321A0E),
+        weight: FontWeight.w900,
+      );
       _paintText(
         canvas,
         (leftRanks[row].basePayout * round.bet).toString(),
         ui.Offset(g.leftPayoutX, y),
-        fontSize: size.x * 0.026,
+        fontSize: size.x * 0.023,
         color: const Color(0xFFB31F16),
         weight: FontWeight.w900,
         centered: true,
       );
 
-      if (row < 4) {
-        _paintText(
-          canvas,
-          (rightRanks[row].basePayout * round.bet).toString(),
-          ui.Offset(g.rightPayoutX, y),
-          fontSize: size.x * 0.026,
-          color: const Color(0xFFB31F16),
-          weight: FontWeight.w900,
-          centered: true,
-        );
-      } else {
-        _paintText(
-          canvas,
-          (5 * round.bet).toString(),
-          ui.Offset(g.rightPayoutX, y),
-          fontSize: size.x * 0.026,
-          color: const Color(0xFFB31F16),
-          weight: FontWeight.w900,
-          centered: true,
-        );
-      }
+      _paintText(
+        canvas,
+        rightLabels[row],
+        ui.Offset(g.rightPayoutLabelX, y),
+        fontSize: size.x * 0.022,
+        color: const Color(0xFF321A0E),
+        weight: FontWeight.w900,
+      );
+      _paintText(
+        canvas,
+        (
+          row < 4
+              ? rightRanks[row].basePayout * round.bet
+              : 5 * round.bet
+        ).toString(),
+        ui.Offset(g.rightPayoutX, y),
+        fontSize: size.x * 0.023,
+        color: const Color(0xFFB31F16),
+        weight: FontWeight.w900,
+        centered: true,
+      );
     }
   }
 
@@ -1942,10 +2006,13 @@ class _CabinetGeometry {
   double get gap => w * 0.012;
   double get buttonGap => w * 0.012;
 
-  double get leftPayoutX => _src(432, 0, 432, 0).left;
-  double get rightPayoutX => _src(802, 0, 802, 0).left;
+  ui.Rect get payTableTextArea => _src(128, 532, 785, 690);
+  double get leftPayoutLabelX => _src(150, 0, 150, 0).left;
+  double get leftPayoutX => _src(410, 0, 410, 0).left;
+  double get rightPayoutLabelX => _src(500, 0, 500, 0).left;
+  double get rightPayoutX => _src(758, 0, 758, 0).left;
   double payoutRowY(int row) =>
-      _src(0, 555 + row * 28, 0, 555 + row * 28).top;
+      _src(0, 550 + row * 29, 0, 550 + row * 29).top;
 
   ui.Rect get zombieProgressStrip => _src(39, 744, 866, 888);
 
@@ -1968,11 +2035,11 @@ class _CabinetGeometry {
   // using their real centers removes the left-to-right drift.  The row is also
   // lowered slightly so the live faces sit vertically inside the gold frames.
   List<ui.Rect> get cardRects => <ui.Rect>[
-        _src(42, 930, 190, 1182),
-        _src(216, 930, 364, 1182),
-        _src(390, 930, 538, 1182),
-        _src(564, 930, 712, 1182),
-        _src(738, 930, 886, 1182),
+        _src(36, 930, 184, 1182),
+        _src(210, 930, 358, 1182),
+        _src(384, 930, 532, 1182),
+        _src(558, 930, 706, 1182),
+        _src(732, 930, 880, 1182),
       ];
 
   // Top control row is three visual slots:
@@ -1988,7 +2055,7 @@ class _CabinetGeometry {
   // Clean backing strips hide the obsolete frames baked into older cabinet art.
   // Live cards and buttons render later, above these strips.
   ui.Rect get cardRowBacking => _src(38, 915, 867, 1190);
-  ui.Rect get controlClusterFrame => _src(38, 1168, 867, 1395);
+  ui.Rect get controlClusterFrame => _src(28, 1148, 877, 1408);
 
   ui.Rect get cashOutButton => _src(55, 1286, 260, 1361);
   ui.Rect get insertCoinsButton => _src(645, 1286, 850, 1361);
@@ -2167,7 +2234,7 @@ class _CardView extends PositionComponent with TapCallbacks {
         ui.Paint()
           ..color = winning
               ? const Color(0xE6A30D14)
-              : const Color(0xE69A190F),
+              : const Color(0x339A190F),
       );
       canvas.drawRRect(
         ui.RRect.fromRectAndRadius(holdRect, const ui.Radius.circular(6)),
