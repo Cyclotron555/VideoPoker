@@ -112,8 +112,13 @@ class RedBlackPokerGame extends FlameGame {
         await images.load('zombie_' + (i + 1).toString().padLeft(2, '0') + '.jpg'),
       );
     }
-    for (var i = 0; i < 4; i++) {
-      _cardBackImages.add(await images.load('card_back_' + i.toString() + '.jpg'));
+    for (final name in <String>[
+      'card_back_castle.png',
+      'card_back_witch.png',
+      'card_back_pumpkin.png',
+      'card_back_skull.png',
+    ]) {
+      _cardBackImages.add(await images.load(name));
     }
 
     for (var i = 0; i < 5; i++) {
@@ -337,7 +342,7 @@ class RedBlackPokerGame extends FlameGame {
     place(_betDownButton, g.betDownButton);
     place(_betUpButton, g.betUpButton);
     place(_betMaxButton, g.betMaxButton);
-    place(_mainDrawButton, round.canStartHand ? g.dealButton : g.drawButton);
+    place(_mainDrawButton, g.dealButton);
     place(_cashOutButton, g.cashOutButton);
     place(_insertCoinsButton, g.insertCoinsButton);
     place(_refillWalletButton, g.refillWalletButton);
@@ -951,14 +956,9 @@ class RedBlackPokerGame extends FlameGame {
       );
     }
 
-    // Background artwork shows DEAL illuminated. Darken it while DRAW is active.
-    if (!round.canStartHand) {
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(g.dealButton.deflate(2),
-            const ui.Radius.circular(8)),
-        ui.Paint()..color = const Color(0x99000000),
-      );
-    }
+    // The approved artwork contains a baked DRAW button. The live UI now uses
+    // one center action button that changes DEAL <-> DRAW, so the right slot is
+    // repurposed as BET MAX and fully covered by its live button overlay.
   }
 
   void _renderSettingsPanel(ui.Canvas canvas) {
@@ -1858,29 +1858,29 @@ class _CabinetGeometry {
       ];
 
   List<ui.Rect> get statusValueMasks => <ui.Rect>[
-        _src(108, 1142, 212, 1184),
-        _src(404, 1142, 534, 1184),
-        _src(718, 1142, 815, 1184),
+        _src(83, 1139, 246, 1186),
+        _src(374, 1139, 558, 1186),
+        _src(696, 1139, 840, 1186),
       ];
 
   ui.Rect get betDownButton => _src(48, 1197, 168, 1285);
   ui.Rect get betUpButton => _src(180, 1197, 306, 1285);
-  ui.Rect get betMaxButton => _src(218, 1115, 286, 1144);
   ui.Rect get dealButton => _src(326, 1194, 616, 1287);
-  ui.Rect get drawButton => _src(632, 1194, 891, 1287);
+  ui.Rect get betMaxButton => _src(632, 1194, 891, 1287);
+  ui.Rect get drawButton => betMaxButton;
 
   ui.Rect get cashOutButton => _src(48, 1293, 258, 1367);
   ui.Rect get insertCoinsButton => _src(661, 1293, 889, 1367);
   ui.Rect get refillWalletButton => _src(270, 1293, 648, 1367);
-  ui.Rect get walletValueMask => _src(390, 1322, 550, 1361);
+  ui.Rect get walletValueMask => _src(344, 1317, 580, 1363);
 
   ui.Rect get doubleUpButton => _src(326, 1194, 616, 1287);
   ui.Rect get collectButton => _src(632, 1194, 891, 1287);
 
   List<ui.Rect> get bottomValueMasks => <ui.Rect>[
-        _src(151, 1580, 230, 1620),
-        _src(433, 1580, 560, 1620),
-        _src(760, 1580, 842, 1620),
+        _src(103, 1573, 254, 1624),
+        _src(391, 1573, 590, 1624),
+        _src(725, 1573, 875, 1624),
       ];
 
   ui.Rect get settingsButton => _src(862, 30, 930, 105);
@@ -1965,11 +1965,14 @@ class _CardView extends PositionComponent with TapCallbacks {
   @override
   void render(ui.Canvas canvas) {
     super.render(canvas);
+
+    // The component covers the whole illustrated card well. Keep artwork inside
+    // the inner portrait window so the cabinet frame and baked HOLD plate remain visible.
     final faceRect = ui.Rect.fromLTWH(
-      size.x * 0.075,
-      size.y * 0.025,
-      size.x * 0.85,
-      size.y * 0.76,
+      size.x * 0.085,
+      size.y * 0.035,
+      size.x * 0.83,
+      size.y * 0.735,
     );
 
     if (faceAtlas != null) {
@@ -2000,36 +2003,62 @@ class _CardView extends PositionComponent with TapCallbacks {
         ui.Paint()..filterQuality = ui.FilterQuality.high,
       );
     } else if (backImage != null) {
+      // Card backs are individual portrait assets. Contain them instead of
+      // stretching/cropping so the full Halloween design is visible.
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(faceRect, const ui.Radius.circular(4)),
+        ui.Paint()..color = const Color(0xFF08090B),
+      );
+      final sw = backImage!.width.toDouble();
+      final sh = backImage!.height.toDouble();
+      final scale = math.min(faceRect.width / sw, faceRect.height / sh);
+      final dw = sw * scale;
+      final dh = sh * scale;
+      final dst = ui.Rect.fromLTWH(
+        faceRect.center.dx - dw / 2,
+        faceRect.center.dy - dh / 2,
+        dw,
+        dh,
+      );
       canvas.drawImageRect(
         backImage!,
-        ui.Rect.fromLTWH(
-          0,
-          0,
-          backImage!.width.toDouble(),
-          backImage!.height.toDouble(),
-        ),
-        faceRect,
+        ui.Rect.fromLTWH(0, 0, sw, sh),
+        dst,
         ui.Paint()..filterQuality = ui.FilterQuality.high,
       );
     }
 
+    // HOLD/WIN is intentionally centered on the card face for instant visibility.
     if (held || winning) {
-      final holdRect =
-          ui.Rect.fromLTWH(size.x * 0.08, size.y * 0.80, size.x * 0.84, size.y * 0.15);
+      final holdRect = ui.Rect.fromCenter(
+        center: ui.Offset(faceRect.center.dx, faceRect.center.dy),
+        width: faceRect.width * 0.80,
+        height: faceRect.height * 0.24,
+      );
       canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(holdRect, const ui.Radius.circular(5)),
+        ui.RRect.fromRectAndRadius(holdRect, const ui.Radius.circular(6)),
         ui.Paint()
           ..color = winning
-              ? const Color(0xDFA30D14)
-              : const Color(0xDFA55E0A),
+              ? const Color(0xE6A30D14)
+              : const Color(0xE69A190F),
+      );
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(holdRect, const ui.Radius.circular(6)),
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = const Color(0xFFFFD56A),
       );
       final painter = TextPainter(
         text: TextSpan(
           text: winning ? 'WIN' : 'HOLD',
           style: TextStyle(
-            color: const Color(0xFFFFE6A0),
+            color: const Color(0xFFFFF0B8),
             fontWeight: FontWeight.w900,
-            fontSize: size.x * 0.14,
+            fontSize: size.x * 0.18,
+            shadows: const <Shadow>[
+              Shadow(color: Color(0xFF000000), blurRadius: 3),
+            ],
           ),
         ),
         textAlign: TextAlign.center,
@@ -2245,48 +2274,70 @@ class _GameButton extends PositionComponent with TapCallbacks {
       canvas.save();
       canvas.translate(0, pressedOffset);
 
-      if (!enabled) {
-        canvas.drawRRect(
-          ui.RRect.fromRectAndRadius(rect.deflate(2), const ui.Radius.circular(7)),
-          ui.Paint()..color = const Color(0x77000000),
-        );
-      } else if (lit) {
+      // Fully cover the baked demo text/state so nothing ghosts through.
+      final base = !enabled
+          ? const Color(0xFF17181B)
+          : Color.lerp(accent, Colors.black, lit ? 0.22 : 0.48)!;
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(rect.deflate(3), const ui.Radius.circular(7)),
+        ui.Paint()..color = base,
+      );
+
+      if (enabled && lit) {
         canvas.drawRRect(
           ui.RRect.fromRectAndRadius(rect.deflate(2), const ui.Radius.circular(7)),
           ui.Paint()
-            ..color = accent.withValues(alpha: _pressed ? 0.34 : 0.18)
+            ..color = accent.withValues(alpha: _pressed ? 0.42 : 0.25)
             ..maskFilter =
-                ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.025),
+                ui.MaskFilter.blur(ui.BlurStyle.normal, size.x * 0.028),
         );
       }
 
-      // BET +/-/MAX need live labels because the approved background has old labels.
-      if (label == 'BET -' || label == 'BET +' || label == 'BET MAX') {
-        canvas.drawRRect(
-          ui.RRect.fromRectAndRadius(rect.deflate(3), const ui.Radius.circular(6)),
-          ui.Paint()..color = const Color(0xB5270608),
-        );
-        final p = TextPainter(
-          text: TextSpan(
-            text: label,
-            style: TextStyle(
-              color: enabled
-                  ? const Color(0xFFFFE4A0)
-                  : const Color(0xFF777777),
-              fontWeight: FontWeight.w900,
-              fontSize: size.x * (label == 'BET MAX' ? 0.14 : 0.18),
-            ),
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(rect.deflate(3), const ui.Radius.circular(7)),
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = 1.4
+          ..color = enabled
+              ? const Color(0xFFD49A42)
+              : const Color(0xFF5A5B5E),
+      );
+
+      final fontScale = label.length > 11
+          ? 0.095
+          : label.length > 8
+              ? 0.115
+              : label.length > 5
+                  ? 0.14
+                  : 0.18;
+      final p = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: enabled
+                ? const Color(0xFFFFE6A8)
+                : const Color(0xFF77787B),
+            fontWeight: FontWeight.w900,
+            fontSize: size.x * fontScale,
+            shadows: enabled && lit
+                ? <Shadow>[
+                    Shadow(
+                      color: accent.withValues(alpha: 0.75),
+                      blurRadius: 5,
+                    ),
+                  ]
+                : null,
           ),
-          textDirection: TextDirection.ltr,
-        )..layout(maxWidth: rect.width * 0.9);
-        p.paint(
-          canvas,
-          ui.Offset(
-            rect.center.dx - p.width / 2,
-            rect.center.dy - p.height / 2,
-          ),
-        );
-      }
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: rect.width * 0.88);
+      p.paint(
+        canvas,
+        ui.Offset(
+          rect.center.dx - p.width / 2,
+          rect.center.dy - p.height / 2,
+        ),
+      );
 
       canvas.restore();
       return;
