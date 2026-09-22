@@ -2299,6 +2299,7 @@ class _GameButton extends PositionComponent with TapCallbacks {
               Color(0xFF24150E),
               Color(0xFF8B6334),
             ],
+            const <double>[0.0, 0.58, 1.0],
           ),
       );
       final faceColor = !enabled
