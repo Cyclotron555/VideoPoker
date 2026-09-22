@@ -33,6 +33,7 @@ class RedBlackPokerGame extends FlameGame {
   ui.Image? _controlPanelHeaderArt;
   ui.Image? _horrorCardsAtlas;
   ui.Image? _masterCabinetArt;
+  ui.Image? _controlClusterFrame;
   ui.Image? _zombieProgressAtlas;
   ui.Image? _halloweenButtonsAtlas;
   final Map<String, ui.Image> _approvedButtonSprites = <String, ui.Image>{};
@@ -108,6 +109,7 @@ class RedBlackPokerGame extends FlameGame {
     _bottomPanelArt = await images.load('bottom_panel.jpg');
     _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
     _masterCabinetArt = await images.load('master_halloween_cabinet_v5.png');
+    _controlClusterFrame = await images.load('control_cluster_frame.png');
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
     _zombieProgressAtlas = await images.load('zombie_progress_atlas.png');
     _halloweenButtonsAtlas = await images.load('halloween_buttons_atlas.png');
@@ -897,6 +899,24 @@ class RedBlackPokerGame extends FlameGame {
 
   void _renderMasterDynamic(ui.Canvas canvas) {
     final g = _geometry;
+
+    // One unified gothic panel sits above the cabinet artwork and behind the
+    // six framed button sprites. The button sprites remain independent and are
+    // rendered later by Flame components.
+    final controlFrame = _controlClusterFrame;
+    if (controlFrame != null) {
+      canvas.drawImageRect(
+        controlFrame,
+        ui.Rect.fromLTWH(
+          0,
+          0,
+          controlFrame.width.toDouble(),
+          controlFrame.height.toDouble(),
+        ),
+        g.controlClusterFrame,
+        ui.Paint()..filterQuality = ui.FilterQuality.high,
+      );
+    }
 
 
     _renderPayoutValues(canvas);
@@ -1935,6 +1955,10 @@ class _CabinetGeometry {
   ui.Rect get dealButton => _src(326, 1193, 596, 1275);
   ui.Rect get betMaxButton => _src(612, 1193, 862, 1275);
   ui.Rect get drawButton => betMaxButton;
+
+  // Unified framed backing panel for the six main controls.
+  // It intentionally sits behind the independent button sprites.
+  ui.Rect get controlClusterFrame => _src(38, 1168, 867, 1395);
 
   ui.Rect get cashOutButton => _src(55, 1286, 260, 1361);
   ui.Rect get insertCoinsButton => _src(645, 1286, 850, 1361);
