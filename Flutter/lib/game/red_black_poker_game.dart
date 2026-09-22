@@ -104,7 +104,7 @@ class RedBlackPokerGame extends FlameGame {
     _paytableArt = await images.load('paytable_frame.jpg');
     _bottomPanelArt = await images.load('bottom_panel.jpg');
     _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
-    _masterCabinetArt = await images.load('master_halloween_cabinet.png');
+    _masterCabinetArt = await images.load('master_halloween_blank.jpg');
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
 
     for (var i = 0; i < 10; i++) {
@@ -855,6 +855,8 @@ class RedBlackPokerGame extends FlameGame {
   void _renderMasterDynamic(ui.Canvas canvas) {
     final g = _geometry;
 
+    _renderPayTable(canvas);
+
     // Dim unearned zombie portraits without destroying the built-in cabinet.
     for (var i = 0; i < g.zombieSlots.length; i++) {
       final slot = g.zombieSlots[i];
@@ -921,20 +923,30 @@ class RedBlackPokerGame extends FlameGame {
       centered: true,
     );
 
+    final bottomLabels = <String>['BANK', 'WALLET', 'MACHINE'];
     final bottomValues = <String>[
-      round.totalFunds.toString(), // BANK
-      round.wallet.toString(),     // WALLET
-      round.cash.toString(),       // MACHINE
+      round.totalFunds.toString(),
+      round.wallet.toString(),
+      round.cash.toString(),
     ];
     for (var i = 0; i < g.bottomValueMasks.length; i++) {
       final r = g.bottomValueMasks[i];
       _paintText(
         canvas,
         bottomValues[i],
-        ui.Offset(r.center.dx, r.center.dy + r.height * 0.24),
+        ui.Offset(r.center.dx, r.top + r.height * 0.42),
         fontSize: size.x * 0.027,
         color: const Color(0xFFFFE06A),
         weight: FontWeight.w900,
+        centered: true,
+      );
+      _paintText(
+        canvas,
+        bottomLabels[i],
+        ui.Offset(r.center.dx, r.top + r.height * 0.78),
+        fontSize: size.x * 0.015,
+        color: const Color(0xFFC9A96A),
+        weight: FontWeight.w800,
         centered: true,
       );
     }
@@ -1800,8 +1812,8 @@ class _CabinetGeometry {
   final double h;
 
   ui.Rect _src(double l, double t, double r, double b) {
-    const sw = 941.0;
-    const sh = 1672.0;
+    const sw = 905.0;
+    const sh = 1738.0;
     return ui.Rect.fromLTRB(
       w * l / sw,
       h * t / sh,
@@ -1815,7 +1827,7 @@ class _CabinetGeometry {
   double get buttonGap => w * 0.012;
 
   List<ui.Rect> get zombieSlots {
-    final frame = _src(43, 700, 895, 836);
+    final frame = _src(48, 752, 857, 888);
     final step = frame.width / 10;
     return List<ui.Rect>.generate(
       10,
@@ -1833,37 +1845,37 @@ class _CabinetGeometry {
   // using their real centers removes the left-to-right drift.  The row is also
   // lowered slightly so the live faces sit vertically inside the gold frames.
   List<ui.Rect> get cardRects => <ui.Rect>[
-        _src(36, 900, 194, 1104),
-        _src(214, 900, 372, 1104),
-        _src(392, 900, 550, 1104),
-        _src(570, 900, 728, 1104),
-        _src(748, 900, 906, 1104),
+        _src(42, 930, 190, 1182),
+        _src(216, 930, 364, 1182),
+        _src(390, 930, 538, 1182),
+        _src(564, 930, 712, 1182),
+        _src(738, 930, 886, 1182),
       ];
 
   List<ui.Rect> get statusValueMasks => <ui.Rect>[
-        _src(83, 1139, 246, 1186),
-        _src(374, 1139, 558, 1186),
-        _src(696, 1139, 840, 1186),
+        _src(70, 1218, 245, 1288),
+        _src(365, 1218, 540, 1288),
+        _src(660, 1218, 835, 1288),
       ];
 
-  ui.Rect get betDownButton => _src(48, 1197, 168, 1285);
-  ui.Rect get betUpButton => _src(180, 1197, 306, 1285);
-  ui.Rect get dealButton => _src(326, 1194, 616, 1287);
-  ui.Rect get betMaxButton => _src(632, 1194, 891, 1287);
+  ui.Rect get betDownButton => _src(58, 1232, 192, 1310);
+  ui.Rect get betUpButton => _src(200, 1232, 334, 1310);
+  ui.Rect get dealButton => _src(348, 1230, 585, 1312);
+  ui.Rect get betMaxButton => _src(603, 1230, 850, 1312);
   ui.Rect get drawButton => betMaxButton;
 
-  ui.Rect get cashOutButton => _src(48, 1293, 258, 1367);
-  ui.Rect get insertCoinsButton => _src(661, 1293, 889, 1367);
-  ui.Rect get refillWalletButton => _src(270, 1293, 648, 1367);
-  ui.Rect get walletValueMask => _src(344, 1317, 580, 1363);
+  ui.Rect get cashOutButton => _src(58, 1322, 250, 1395);
+  ui.Rect get insertCoinsButton => _src(655, 1322, 850, 1395);
+  ui.Rect get refillWalletButton => _src(270, 1322, 635, 1395);
+  ui.Rect get walletValueMask => _src(300, 1324, 605, 1392);
 
   ui.Rect get doubleUpButton => _src(326, 1194, 616, 1287);
   ui.Rect get collectButton => _src(632, 1194, 891, 1287);
 
   List<ui.Rect> get bottomValueMasks => <ui.Rect>[
-        _src(103, 1573, 254, 1624),
-        _src(391, 1573, 590, 1624),
-        _src(725, 1573, 875, 1624),
+        _src(70, 1622, 265, 1684),
+        _src(355, 1622, 550, 1684),
+        _src(640, 1622, 835, 1684),
       ];
 
   List<ui.Rect> get bottomPanelRects => <ui.Rect>[
@@ -1876,20 +1888,20 @@ class _CabinetGeometry {
 
   // Compatibility geometry retained for legacy render helpers. The active
   // main-game renderer uses the approved full-screen cabinet artwork.
-  ui.Rect get titleBanner => _src(145, 85, 800, 470);
-  ui.Rect get zombieFrame => _src(43, 700, 895, 836);
-  ui.Rect get payTable => _src(86, 489, 855, 684);
+  ui.Rect get titleBanner => _src(145, 90, 760, 520);
+  ui.Rect get zombieFrame => _src(48, 752, 857, 888);
+  ui.Rect get payTable => _src(105, 535, 800, 735);
 
-  double get statusTop => _src(0, 1112, 0, 1112).top;
-  double get statusMessageY => _src(0, 851, 0, 851).top;
+  double get statusTop => _src(0, 1208, 0, 1208).top;
+  double get statusMessageY => _src(0, 905, 0, 905).top;
 
   List<ui.Rect> get statusPanels => <ui.Rect>[
-        _src(42, 1111, 286, 1185),
-        _src(300, 1111, 632, 1185),
-        _src(646, 1111, 891, 1185),
+        _src(45, 1205, 285, 1292),
+        _src(333, 1205, 573, 1292),
+        _src(620, 1205, 860, 1292),
       ];
 
-  ui.Rect get bottomArt => _src(38, 1376, 905, 1567);
+  ui.Rect get bottomArt => _src(45, 1405, 860, 1608);
 
   ui.Rect get controlPanel => _src(45, 1110, 891, 1369);
   ui.Rect get walletStrip => _src(270, 1293, 648, 1367);
