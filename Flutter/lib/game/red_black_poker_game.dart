@@ -1858,9 +1858,13 @@ class _CabinetGeometry {
         _src(660, 1218, 835, 1288),
       ];
 
-  ui.Rect get betDownButton => _src(58, 1232, 192, 1310);
-  ui.Rect get betUpButton => _src(200, 1232, 334, 1310);
-  ui.Rect get dealButton => _src(348, 1230, 585, 1312);
+  // Top control row is three visual slots:
+  //   1) BET- and BET+ share the first slot
+  //   2) TRANSFER TO CASH fills the second slot
+  //   3) DRAW fills the third slot
+  ui.Rect get betDownButton => _src(58, 1232, 174, 1310);
+  ui.Rect get betUpButton => _src(184, 1232, 300, 1310);
+  ui.Rect get dealButton => _src(320, 1230, 585, 1312);
   ui.Rect get betMaxButton => _src(603, 1230, 850, 1312);
   ui.Rect get drawButton => betMaxButton;
 
