@@ -35,6 +35,7 @@ class RedBlackPokerGame extends FlameGame {
   ui.Image? _masterCabinetArt;
   ui.Image? _zombieProgressAtlas;
   ui.Image? _halloweenButtonsAtlas;
+  final Map<String, ui.Image> _approvedButtonSprites = <String, ui.Image>{};
 
   final AutoHoldAdvisor _autoHoldAdvisor = const AutoHoldAdvisor();
   Duration cardDisplayDelay = const Duration(milliseconds: 275);
@@ -110,6 +111,22 @@ class RedBlackPokerGame extends FlameGame {
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
     _zombieProgressAtlas = await images.load('zombie_progress_atlas.png');
     _halloweenButtonsAtlas = await images.load('halloween_buttons_atlas.png');
+    for (final name in <String>[
+      'bet_minus_off_approved.png',
+      'bet_minus_on_approved.png',
+      'bet_plus_off_approved.png',
+      'bet_plus_on_approved.png',
+      'transfer_to_cash_off_approved.png',
+      'transfer_to_cash_on_approved.png',
+      'draw_off_approved.png',
+      'draw_on_approved.png',
+      'cash_out_off_approved.png',
+      'cash_out_on_approved.png',
+      'add_money_off_approved.png',
+      'add_money_on_approved.png',
+    ]) {
+      _approvedButtonSprites[name] = await images.load(name);
+    }
 
     for (var i = 0; i < 10; i++) {
       _zombieHeadImages.add(
@@ -142,17 +159,15 @@ class RedBlackPokerGame extends FlameGame {
       label: 'DRAW',
       accent: const Color(0xFFBD1722),
       onPressed: _mainDrawPressed,
-      spriteAtlas: _halloweenButtonsAtlas,
-      offSrc: const ui.Rect.fromLTWH(8, 270, 250, 82),
-      onSrc: const ui.Rect.fromLTWH(286, 270, 250, 82),
+      offImage: _approvedButtonSprites['draw_off_approved.png'],
+      onImage: _approvedButtonSprites['draw_on_approved.png'],
     );
     _betDownButton = _GameButton(
       integrated: true,
       label: 'BET -',
       accent: const Color(0xFF8E4D0B),
-      spriteAtlas: _halloweenButtonsAtlas,
-      offSrc: const ui.Rect.fromLTWH(8, 8, 128, 78),
-      onSrc: const ui.Rect.fromLTWH(286, 8, 128, 78),
+      offImage: _approvedButtonSprites['bet_minus_off_approved.png'],
+      onImage: _approvedButtonSprites['bet_minus_on_approved.png'],
       onPressed: () {
         round.changeBet(-1);
         _syncView();
@@ -162,9 +177,8 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'BET +',
       accent: const Color(0xFFB46D0B),
-      spriteAtlas: _halloweenButtonsAtlas,
-      offSrc: const ui.Rect.fromLTWH(8, 94, 128, 78),
-      onSrc: const ui.Rect.fromLTWH(286, 94, 128, 78),
+      offImage: _approvedButtonSprites['bet_plus_off_approved.png'],
+      onImage: _approvedButtonSprites['bet_plus_on_approved.png'],
       onPressed: () {
         round.changeBet(1);
         _syncView();
@@ -174,9 +188,8 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'TRANSFER TO CASH',
       accent: const Color(0xFF8E4D0B),
-      spriteAtlas: _halloweenButtonsAtlas,
-      offSrc: const ui.Rect.fromLTWH(8, 180, 270, 82),
-      onSrc: const ui.Rect.fromLTWH(286, 180, 270, 82),
+      offImage: _approvedButtonSprites['transfer_to_cash_off_approved.png'],
+      onImage: _approvedButtonSprites['transfer_to_cash_on_approved.png'],
       onPressed: () {
         round.transferToCash();
         _syncView();
@@ -186,9 +199,8 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'CASH OUT',
       accent: const Color(0xFF6D4A1C),
-      spriteAtlas: _halloweenButtonsAtlas,
-      offSrc: const ui.Rect.fromLTWH(8, 360, 205, 75),
-      onSrc: const ui.Rect.fromLTWH(286, 360, 205, 75),
+      offImage: _approvedButtonSprites['cash_out_off_approved.png'],
+      onImage: _approvedButtonSprites['cash_out_on_approved.png'],
       onPressed: () {
         round.cashOut();
         _syncView();
@@ -198,9 +210,8 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'ADD MONEY',
       accent: const Color(0xFF365A72),
-      spriteAtlas: _halloweenButtonsAtlas,
-      offSrc: const ui.Rect.fromLTWH(8, 443, 205, 75),
-      onSrc: const ui.Rect.fromLTWH(286, 443, 205, 75),
+      offImage: _approvedButtonSprites['add_money_off_approved.png'],
+      onImage: _approvedButtonSprites['add_money_on_approved.png'],
       onPressed: () {
         round.addMoney();
         _syncView();
@@ -2284,6 +2295,8 @@ class _GameButton extends PositionComponent with TapCallbacks {
     this.spriteAtlas,
     this.offSrc,
     this.onSrc,
+    this.offImage,
+    this.onImage,
   });
 
   String label;
@@ -2293,6 +2306,8 @@ class _GameButton extends PositionComponent with TapCallbacks {
   final ui.Image? spriteAtlas;
   final ui.Rect? offSrc;
   final ui.Rect? onSrc;
+  final ui.Image? offImage;
+  final ui.Image? onImage;
   bool enabled = true;
   bool lit = false;
   bool _pressed = false;
@@ -2327,6 +2342,23 @@ class _GameButton extends PositionComponent with TapCallbacks {
     if (size.x <= 0 || size.y <= 0) return;
 
     if (integrated) {
+      final exact = enabled && lit ? onImage : offImage;
+      if (exact != null) {
+        final target = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+        canvas.drawImageRect(
+          exact,
+          ui.Rect.fromLTWH(
+            0,
+            0,
+            exact.width.toDouble(),
+            exact.height.toDouble(),
+          ),
+          target,
+          ui.Paint()..filterQuality = ui.FilterQuality.high,
+        );
+        return;
+      }
+
       final atlas = spriteAtlas;
       final src = enabled && lit ? onSrc : offSrc;
       if (atlas != null && src != null) {
