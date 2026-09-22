@@ -44,16 +44,27 @@ class PokerRound {
   int bonusProgress = 0;
 
   int get lastWin => pendingWin;
-  int get bank => wallet + credits + pendingWin;
+
+  // Original Red Black Poker terminology:
+  // wallet = money the player owns outside the machine
+  // cash   = playable machine balance
+  int get cash => credits;
+  int get totalFunds => wallet + credits + pendingWin;
+  int get bank => totalFunds;
+
   bool get bonusReady => bonusProgress >= bonusTarget;
 
   bool get canAdjustMoney =>
       phase == RoundPhase.idle || phase == RoundPhase.result;
 
-  bool get canInsertCoins => canAdjustMoney && wallet > 0;
+  bool get canTransferToCash => canAdjustMoney && wallet > 0;
 
   bool get canCashOut => canAdjustMoney && credits > 0;
 
+  bool get canAddMoney => canAdjustMoney;
+
+  // Compatibility getters retained for older tests/callers.
+  bool get canInsertCoins => canTransferToCash;
   bool get canRefillWallet => canAdjustMoney && wallet == 0;
 
   bool get canStartHand =>
@@ -73,12 +84,21 @@ class PokerRound {
     bet = (bet + delta).clamp(1, 5);
   }
 
-  int insertCoins([int amount = 10]) {
-    if (!canInsertCoins || amount <= 0) return 0;
+  int transferToCash([int amount = 5]) {
+    if (!canTransferToCash || amount <= 0) return 0;
     final transfer = amount > wallet ? wallet : amount;
     wallet -= transfer;
     credits += transfer;
     return transfer;
+  }
+
+  // Legacy name from the first Flutter pass.
+  int insertCoins([int amount = 10]) => transferToCash(amount);
+
+  int addMoney([int amount = 5]) {
+    if (!canAddMoney || amount <= 0) return 0;
+    wallet += amount;
+    return amount;
   }
 
   int cashOut() {
