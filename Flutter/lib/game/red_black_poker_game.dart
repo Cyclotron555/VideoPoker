@@ -106,7 +106,7 @@ class RedBlackPokerGame extends FlameGame {
     _paytableArt = await images.load('paytable_frame.jpg');
     _bottomPanelArt = await images.load('bottom_panel.jpg');
     _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
-    _masterCabinetArt = await images.load('master_halloween_cabinet_v2.png');
+    _masterCabinetArt = await images.load('master_halloween_cabinet_v3.png');
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
     _zombieProgressAtlas = await images.load('zombie_progress_atlas.png');
     _halloweenButtonsAtlas = await images.load('halloween_buttons_atlas.png');
@@ -894,33 +894,27 @@ class RedBlackPokerGame extends FlameGame {
       );
     }
 
-    // Only live values belong in these three upper readouts.
-    // No extra captions or painted background rectangles.
-    final values = <String>[
-      round.bet.toString(),
-      round.cash.toString(),
-      round.pendingWin.toString(),
-    ];
-    for (var i = 0; i < g.statusValueMasks.length; i++) {
-      final r = g.statusValueMasks[i];
-      _paintText(
-        canvas,
-        values[i],
-        ui.Offset(r.center.dx, r.center.dy + r.height * 0.10),
-        fontSize: size.x * 0.047,
-        color: i == 0 ? const Color(0xFFFF3E3E) : const Color(0xFFFFED52),
-        weight: FontWeight.w900,
-        centered: true,
-      );
-    }
-
-    // Center wallet readout is also number-only.
+    // The three upper dark regions are button locations now, so there are no
+    // separate BET / CASH / WIN readouts.  The center lower readout is the
+    // player's wallet/credits amount, matching the visual target.
+    _paintText(
+      canvas,
+      'CREDITS',
+      ui.Offset(
+        g.walletValueMask.center.dx,
+        g.walletValueMask.top + g.walletValueMask.height * 0.28,
+      ),
+      fontSize: size.x * 0.016,
+      color: const Color(0xFFD9B867),
+      weight: FontWeight.w800,
+      centered: true,
+    );
     _paintText(
       canvas,
       round.wallet.toString(),
       ui.Offset(
         g.walletValueMask.center.dx,
-        g.walletValueMask.center.dy + g.walletValueMask.height * 0.10,
+        g.walletValueMask.top + g.walletValueMask.height * 0.64,
       ),
       fontSize: size.x * 0.045,
       color: const Color(0xFFFFE05B),
@@ -1847,12 +1841,6 @@ class _CabinetGeometry {
         _src(390, 930, 538, 1182),
         _src(564, 930, 712, 1182),
         _src(738, 930, 886, 1182),
-      ];
-
-  List<ui.Rect> get statusValueMasks => <ui.Rect>[
-        _src(70, 1218, 245, 1288),
-        _src(365, 1218, 540, 1288),
-        _src(660, 1218, 835, 1288),
       ];
 
   // Top control row is three visual slots:
