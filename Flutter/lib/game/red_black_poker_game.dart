@@ -510,6 +510,18 @@ class RedBlackPokerGame extends FlameGame {
 
   Future<void> _mainDrawPressed() async {
     if (_isAnimatingCards || _redBlackMode || _controlPanelOpen) return;
+
+    // For the current cabinet design the six main controls stay visible.
+    // If a hand has a pending win, pressing DRAW first collects it and then
+    // immediately starts the next hand.  We can reintroduce dedicated
+    // DOUBLE-UP / COLLECT controls later without hiding the approved buttons.
+    if (round.hasPendingWin) {
+      round.collectWin();
+      _syncView();
+      await _dealAnimated();
+      return;
+    }
+
     if (round.canStartHand) {
       await _dealAnimated();
     } else if (round.canDrawReplacement) {
@@ -729,10 +741,18 @@ class RedBlackPokerGame extends FlameGame {
     _refillWalletButton.lit = _refillWalletButton.enabled;
 
     final decision = round.phase == RoundPhase.winDecision && !_isAnimatingCards;
-    _doubleUpButton.enabled = decision;
-    _collectButton.enabled = decision;
-    _doubleUpButton.lit = decision;
-    _collectButton.lit = decision;
+
+    // Keep the approved six-button cabinet visible at all times.
+    // DRAW becomes the continue/collect action on a winning hand.
+    if (decision) {
+      _mainDrawButton.enabled = true;
+      _mainDrawButton.lit = true;
+    }
+
+    _doubleUpButton.enabled = false;
+    _collectButton.enabled = false;
+    _doubleUpButton.lit = false;
+    _collectButton.lit = false;
 
     if (round.bonusProgress > _lastBonusProgress) {
       _bonusFlareIndex = round.bonusProgress - 1;
@@ -742,18 +762,8 @@ class RedBlackPokerGame extends FlameGame {
 
     _layoutMainGame();
     _hideButton(_refillWalletButton);
-    if (!decision) {
-      _hideButton(_doubleUpButton);
-      _hideButton(_collectButton);
-    } else {
-      _hideButton(_mainDrawButton);
-      _hideButton(_betDownButton);
-      _hideButton(_betUpButton);
-      _hideButton(_betMaxButton);
-      _hideButton(_cashOutButton);
-      _hideButton(_insertCoinsButton);
-      _hideButton(_refillWalletButton);
-    }
+    _hideButton(_doubleUpButton);
+    _hideButton(_collectButton);
   }
 
   int _horrorAtlasColumn(int rank) {
