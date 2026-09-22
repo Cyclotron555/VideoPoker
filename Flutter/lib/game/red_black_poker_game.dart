@@ -2055,7 +2055,9 @@ class _CabinetGeometry {
   // Clean backing strips hide the obsolete frames baked into older cabinet art.
   // Live cards and buttons render later, above these strips.
   ui.Rect get cardRowBacking => _src(38, 915, 867, 1190);
-  ui.Rect get controlClusterFrame => _src(28, 1148, 877, 1408);
+  // Extend the opaque control backing farther upward so every remnant of the
+  // legacy baked button captions/wells is covered before live sprites render.
+  ui.Rect get controlClusterFrame => _src(20, 1118, 885, 1412);
 
   ui.Rect get cashOutButton => _src(55, 1286, 260, 1361);
   ui.Rect get insertCoinsButton => _src(645, 1286, 850, 1361);
