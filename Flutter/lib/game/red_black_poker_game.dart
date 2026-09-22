@@ -2430,6 +2430,7 @@ class _GameButton extends PositionComponent with TapCallbacks {
     this.onSrc,
     this.offImage,
     this.onImage,
+    this.exactCropBottomFraction = 0.18,
   });
 
   String label;
@@ -2441,6 +2442,7 @@ class _GameButton extends PositionComponent with TapCallbacks {
   final ui.Rect? onSrc;
   final ui.Image? offImage;
   final ui.Image? onImage;
+  final double exactCropBottomFraction;
   bool enabled = true;
   bool lit = false;
   bool _pressed = false;
@@ -2478,13 +2480,19 @@ class _GameButton extends PositionComponent with TapCallbacks {
       final exact = enabled && lit ? onImage : offImage;
       if (exact != null) {
         final target = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+        // The approved source crops were taken from the design board and
+        // included a thin strip of the board's OFF/ON annotation underneath
+        // the framed button. Crop that strip at render time so only the actual
+        // button artwork reaches the game.
+        final crop = exactCropBottomFraction.clamp(0.0, 0.40);
+        final sourceHeight = exact.height.toDouble() * (1.0 - crop);
         canvas.drawImageRect(
           exact,
           ui.Rect.fromLTWH(
             0,
             0,
             exact.width.toDouble(),
-            exact.height.toDouble(),
+            sourceHeight,
           ),
           target,
           ui.Paint()..filterQuality = ui.FilterQuality.high,
