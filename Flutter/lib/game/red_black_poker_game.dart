@@ -33,6 +33,7 @@ class RedBlackPokerGame extends FlameGame {
   ui.Image? _controlPanelHeaderArt;
   ui.Image? _horrorCardsAtlas;
   ui.Image? _masterCabinetArt;
+  ui.Image? _controlAtlas;
 
   final AutoHoldAdvisor _autoHoldAdvisor = const AutoHoldAdvisor();
   Duration cardDisplayDelay = const Duration(milliseconds: 275);
@@ -106,6 +107,7 @@ class RedBlackPokerGame extends FlameGame {
     _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
     _masterCabinetArt = await images.load('master_halloween_cabinet.png');
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
+    _controlAtlas = await images.load('rbp_control_atlas.png');
 
     for (var i = 0; i < 10; i++) {
       _zombieHeadImages.add(
@@ -138,11 +140,17 @@ class RedBlackPokerGame extends FlameGame {
       label: 'DRAW',
       accent: const Color(0xFFBD1722),
       onPressed: _mainDrawPressed,
+      spriteAtlas: _controlAtlas,
+      offSrc: const ui.Rect.fromLTWH(256, 47, 128, 50),
+      onSrc: const ui.Rect.fromLTWH(384, 46, 128, 52),
     );
     _betDownButton = _GameButton(
       integrated: true,
       label: 'BET -',
       accent: const Color(0xFF8E4D0B),
+      spriteAtlas: _controlAtlas,
+      offSrc: const ui.Rect.fromLTWH(0, 0, 128, 44),
+      onSrc: const ui.Rect.fromLTWH(128, 0, 128, 44),
       onPressed: () {
         round.changeBet(-1);
         _syncView();
@@ -152,6 +160,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'BET +',
       accent: const Color(0xFFB46D0B),
+      spriteAtlas: _controlAtlas,
+      offSrc: const ui.Rect.fromLTWH(256, 0, 128, 44),
+      onSrc: const ui.Rect.fromLTWH(384, 1, 128, 43),
       onPressed: () {
         round.changeBet(1);
         _syncView();
@@ -161,6 +172,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'TRANSFER TO CASH',
       accent: const Color(0xFF8E4D0B),
+      spriteAtlas: _controlAtlas,
+      offSrc: const ui.Rect.fromLTWH(0, 52, 128, 41),
+      onSrc: const ui.Rect.fromLTWH(128, 52, 128, 41),
       onPressed: () {
         round.transferToCash();
         _syncView();
@@ -179,6 +193,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'ADD MONEY',
       accent: const Color(0xFF365A72),
+      spriteAtlas: _controlAtlas,
+      offSrc: const ui.Rect.fromLTWH(0, 102, 128, 41),
+      onSrc: const ui.Rect.fromLTWH(128, 102, 128, 40),
       onPressed: () {
         round.addMoney();
         _syncView();
@@ -708,12 +725,7 @@ class RedBlackPokerGame extends FlameGame {
     _lastBonusProgress = round.bonusProgress;
 
     _layoutMainGame();
-    if (round.canRefillWallet && !decision) {
-      _hideButton(_cashOutButton);
-      _hideButton(_insertCoinsButton);
-    } else {
-      _hideButton(_refillWalletButton);
-    }
+    _hideButton(_refillWalletButton);
     if (!decision) {
       _hideButton(_doubleUpButton);
       _hideButton(_collectButton);
@@ -952,84 +964,39 @@ class RedBlackPokerGame extends FlameGame {
       centered: true,
     );
 
-    // The original game has one DRAW action.  The center well is wallet -> cash,
-    // the right well is DRAW, and the lower-right well adds money to the wallet.
-    // Hit targets are invisible; only small text masks below replace obsolete
-    // baked labels so the ornate cabinet frames are never painted twice.
-
-    _paintCabinetControlLabel(canvas, g.dealButton, 'TRANSFER\nTO CASH');
-    _paintCabinetControlLabel(canvas, g.drawButton, 'DRAW');
-    _paintCabinetControlLabel(canvas, g.insertCoinsButton, 'ADD MONEY');
-
-    _paintCabinetAccounting(canvas, g);
+    _paintBottomSpritePanels(canvas, g);
   }
 
-  void _paintCabinetControlLabel(
-    ui.Canvas canvas,
-    ui.Rect buttonRect,
-    String label,
-  ) {
-    // Cover only the old printed words, not the illustrated button/frame.
-    final patch = ui.Rect.fromCenter(
-      center: buttonRect.center,
-      width: buttonRect.width * 0.62,
-      height: buttonRect.height * 0.46,
-    );
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(patch, const ui.Radius.circular(3)),
-      ui.Paint()..color = const Color(0xFF24150D),
-    );
+  void _paintBottomSpritePanels(ui.Canvas canvas, _CabinetGeometry g) {
+    final atlas = _controlAtlas;
+    if (atlas == null) return;
 
-    final painter = TextPainter(
-      text: TextSpan(
-        text: label,
-        style: TextStyle(
-          color: const Color(0xFFFFE3A0),
-          fontWeight: FontWeight.w900,
-          fontSize: math.min(buttonRect.width * 0.105, buttonRect.height * 0.25),
-          height: 0.92,
-        ),
-      ),
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: patch.width * 0.95);
-    painter.paint(
-      canvas,
-      ui.Offset(
-        patch.center.dx - painter.width / 2,
-        patch.center.dy - painter.height / 2,
-      ),
-    );
-  }
-
-  void _paintCabinetAccounting(ui.Canvas canvas, _CabinetGeometry g) {
-    // Remove the old BANK / MACHINE wording and make the accounting unambiguous.
-    final labels = <String>['CASH', 'WALLET', 'TOTAL'];
+    const sources = <ui.Rect>[
+      ui.Rect.fromLTWH(0, 157, 170, 50),
+      ui.Rect.fromLTWH(170, 156, 170, 53),
+      ui.Rect.fromLTWH(340, 157, 170, 51),
+    ];
     final values = <String>[
       round.cash.toString(),
       round.wallet.toString(),
       round.totalFunds.toString(),
     ];
 
-    for (var i = 0; i < g.bottomValueMasks.length; i++) {
-      final r = g.bottomValueMasks[i];
-      canvas.drawRect(r, ui.Paint()..color = const Color(0xF2070809));
-      _paintText(
-        canvas,
-        values[i],
-        ui.Offset(r.center.dx, r.top + r.height * 0.38),
-        fontSize: size.x * 0.026,
-        color: const Color(0xFFFFE06A),
-        weight: FontWeight.w900,
-        centered: true,
+    for (var i = 0; i < 3; i++) {
+      final dst = g.bottomPanelRects[i];
+      canvas.drawImageRect(
+        atlas,
+        sources[i],
+        dst,
+        ui.Paint()..filterQuality = ui.FilterQuality.high,
       );
       _paintText(
         canvas,
-        labels[i],
-        ui.Offset(r.center.dx, r.top + r.height * 0.76),
-        fontSize: size.x * 0.015,
-        color: const Color(0xFFC9A96A),
-        weight: FontWeight.w800,
+        values[i],
+        ui.Offset(dst.center.dx, dst.center.dy + dst.height * 0.09),
+        fontSize: size.x * 0.029,
+        color: const Color(0xFFFFE06A),
+        weight: FontWeight.w900,
         centered: true,
       );
     }
@@ -1928,11 +1895,11 @@ class _CabinetGeometry {
   // using their real centers removes the left-to-right drift.  The row is also
   // lowered slightly so the live faces sit vertically inside the gold frames.
   List<ui.Rect> get cardRects => <ui.Rect>[
-        _src(24, 894, 182, 1098),
-        _src(202, 894, 360, 1098),
-        _src(380, 894, 538, 1098),
-        _src(558, 894, 716, 1098),
-        _src(736, 894, 894, 1098),
+        _src(30, 894, 188, 1098),
+        _src(208, 894, 366, 1098),
+        _src(386, 894, 544, 1098),
+        _src(564, 894, 722, 1098),
+        _src(742, 894, 900, 1098),
       ];
 
   List<ui.Rect> get statusValueMasks => <ui.Rect>[
@@ -1959,6 +1926,12 @@ class _CabinetGeometry {
         _src(103, 1573, 254, 1624),
         _src(391, 1573, 590, 1624),
         _src(725, 1573, 875, 1624),
+      ];
+
+  List<ui.Rect> get bottomPanelRects => <ui.Rect>[
+        _src(54, 1554, 286, 1638),
+        _src(296, 1554, 646, 1638),
+        _src(656, 1554, 895, 1638),
       ];
 
   ui.Rect get settingsButton => _src(862, 30, 930, 105);
@@ -2307,12 +2280,18 @@ class _GameButton extends PositionComponent with TapCallbacks {
     required this.accent,
     required this.onPressed,
     this.integrated = false,
+    this.spriteAtlas,
+    this.offSrc,
+    this.onSrc,
   });
 
   String label;
   Color accent;
   final VoidCallback onPressed;
   final bool integrated;
+  final ui.Image? spriteAtlas;
+  final ui.Rect? offSrc;
+  final ui.Rect? onSrc;
   bool enabled = true;
   bool lit = false;
   bool _pressed = false;
@@ -2347,9 +2326,23 @@ class _GameButton extends PositionComponent with TapCallbacks {
     if (size.x <= 0 || size.y <= 0) return;
 
     if (integrated) {
-      // The cabinet artwork already contains the visible control faces.
-      // Integrated components are hit targets only; drawing another button here
-      // creates the obvious "button on top of a button" look.
+      final atlas = spriteAtlas;
+      final src = enabled && lit ? onSrc : offSrc;
+      if (atlas != null && src != null) {
+        final target = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+        final scale = math.min(target.width / src.width, target.height / src.height);
+        final fitted = ui.Rect.fromCenter(
+          center: target.center,
+          width: src.width * scale,
+          height: src.height * scale,
+        );
+        canvas.drawImageRect(
+          atlas,
+          src,
+          fitted,
+          ui.Paint()..filterQuality = ui.FilterQuality.high,
+        );
+      }
       return;
     }
 
