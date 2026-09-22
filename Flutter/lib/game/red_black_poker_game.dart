@@ -159,16 +159,10 @@ class RedBlackPokerGame extends FlameGame {
     );
     _betMaxButton = _GameButton(
       integrated: true,
-      label: 'BET MAX',
-      accent: const Color(0xFFB46D0B),
+      label: 'TRANSFER TO CASH',
+      accent: const Color(0xFF8E4D0B),
       onPressed: () {
-        if (round.phase != RoundPhase.idle &&
-            round.phase != RoundPhase.result) {
-          return;
-        }
-        while (round.bet < 5) {
-          round.changeBet(1);
-        }
+        round.transferToCash();
         _syncView();
       },
     );
@@ -183,10 +177,10 @@ class RedBlackPokerGame extends FlameGame {
     );
     _insertCoinsButton = _GameButton(
       integrated: true,
-      label: 'INSERT COINS',
+      label: 'ADD MONEY',
       accent: const Color(0xFF365A72),
       onPressed: () {
-        round.insertCoins(10);
+        round.addMoney();
         _syncView();
       },
     );
@@ -341,8 +335,8 @@ class RedBlackPokerGame extends FlameGame {
 
     place(_betDownButton, g.betDownButton);
     place(_betUpButton, g.betUpButton);
-    place(_betMaxButton, g.betMaxButton);
-    place(_mainDrawButton, g.dealButton);
+    place(_betMaxButton, g.dealButton);
+    place(_mainDrawButton, g.drawButton);
     place(_cashOutButton, g.cashOutButton);
     place(_insertCoinsButton, g.insertCoinsButton);
     place(_refillWalletButton, g.refillWalletButton);
@@ -691,10 +685,10 @@ class RedBlackPokerGame extends FlameGame {
     final moneyControls = !_isAnimatingCards && round.canAdjustMoney;
     _betDownButton.enabled = moneyControls && round.bet > 1;
     _betUpButton.enabled = moneyControls && round.bet < 5;
-    _betMaxButton.enabled = moneyControls && round.bet < 5;
+    _betMaxButton.enabled = !_isAnimatingCards && round.canTransferToCash;
     _cashOutButton.enabled = !_isAnimatingCards && round.canCashOut;
-    _insertCoinsButton.enabled = !_isAnimatingCards && round.canInsertCoins;
-    _refillWalletButton.enabled = !_isAnimatingCards && round.canRefillWallet;
+    _insertCoinsButton.enabled = !_isAnimatingCards && round.canAddMoney;
+    _refillWalletButton.enabled = false;
     _betDownButton.lit = _betDownButton.enabled;
     _betUpButton.lit = _betUpButton.enabled;
     _betMaxButton.lit = _betMaxButton.enabled;
@@ -902,7 +896,7 @@ class RedBlackPokerGame extends FlameGame {
     // Replace baked demo values with live game values.
     final values = <String>[
       round.bet.toString(),
-      round.credits.toString(),
+      round.cash.toString(),
       round.pendingWin.toString(),
     ];
     for (var i = 0; i < g.statusValueMasks.length; i++) {
@@ -937,28 +931,87 @@ class RedBlackPokerGame extends FlameGame {
       centered: true,
     );
 
-    final bottomValues = <String>[
-      round.bank.toString(),
+    // The original game has one DRAW action.  The center well is wallet -> cash,
+    // the right well is DRAW, and the lower-right well adds money to the wallet.
+    // Hit targets are invisible; only small text masks below replace obsolete
+    // baked labels so the ornate cabinet frames are never painted twice.
+
+    _paintCabinetControlLabel(canvas, g.dealButton, 'TRANSFER\nTO CASH');
+    _paintCabinetControlLabel(canvas, g.drawButton, 'DRAW');
+    _paintCabinetControlLabel(canvas, g.insertCoinsButton, 'ADD MONEY');
+
+    _paintCabinetAccounting(canvas, g);
+  }
+
+  void _paintCabinetControlLabel(
+    ui.Canvas canvas,
+    ui.Rect buttonRect,
+    String label,
+  ) {
+    // Cover only the old printed words, not the illustrated button/frame.
+    final patch = ui.Rect.fromCenter(
+      center: buttonRect.center,
+      width: buttonRect.width * 0.62,
+      height: buttonRect.height * 0.46,
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(patch, const ui.Radius.circular(3)),
+      ui.Paint()..color = const Color(0xFF24150D),
+    );
+
+    final painter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: TextStyle(
+          color: const Color(0xFFFFE3A0),
+          fontWeight: FontWeight.w900,
+          fontSize: math.min(buttonRect.width * 0.105, buttonRect.height * 0.25),
+          height: 0.92,
+        ),
+      ),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: patch.width * 0.95);
+    painter.paint(
+      canvas,
+      ui.Offset(
+        patch.center.dx - painter.width / 2,
+        patch.center.dy - painter.height / 2,
+      ),
+    );
+  }
+
+  void _paintCabinetAccounting(ui.Canvas canvas, _CabinetGeometry g) {
+    // Remove the old BANK / MACHINE wording and make the accounting unambiguous.
+    final labels = <String>['CASH', 'WALLET', 'TOTAL'];
+    final values = <String>[
+      round.cash.toString(),
       round.wallet.toString(),
-      round.credits.toString(),
+      round.totalFunds.toString(),
     ];
+
     for (var i = 0; i < g.bottomValueMasks.length; i++) {
       final r = g.bottomValueMasks[i];
-      canvas.drawRect(r, ui.Paint()..color = const Color(0xE9070809));
+      canvas.drawRect(r, ui.Paint()..color = const Color(0xF2070809));
       _paintText(
         canvas,
-        bottomValues[i],
-        r.center,
-        fontSize: size.x * 0.027,
+        values[i],
+        ui.Offset(r.center.dx, r.top + r.height * 0.38),
+        fontSize: size.x * 0.026,
         color: const Color(0xFFFFE06A),
         weight: FontWeight.w900,
         centered: true,
       );
+      _paintText(
+        canvas,
+        labels[i],
+        ui.Offset(r.center.dx, r.top + r.height * 0.76),
+        fontSize: size.x * 0.015,
+        color: const Color(0xFFC9A96A),
+        weight: FontWeight.w800,
+        centered: true,
+      );
     }
-
-    // The approved artwork contains a baked DRAW button. The live UI now uses
-    // one center action button that changes DEAL <-> DRAW, so the right slot is
-    // repurposed as BET MAX and fully covered by its live button overlay.
   }
 
   void _renderSettingsPanel(ui.Canvas canvas) {
@@ -1469,7 +1522,7 @@ class RedBlackPokerGame extends FlameGame {
 
     _paintText(
       canvas,
-      'BANK  ' + round.bank.toString(),
+      'CASH  ' + round.cash.toString(),
       ui.Offset(walletRect.left + walletRect.width * 0.18, walletRect.center.dy),
       fontSize: size.x * 0.022,
       color: const Color(0xFFC9A96A),
@@ -1487,7 +1540,7 @@ class RedBlackPokerGame extends FlameGame {
     );
     _paintText(
       canvas,
-      'MACHINE  ' + round.credits.toString(),
+      'TOTAL  ' + round.totalFunds.toString(),
       ui.Offset(walletRect.right - walletRect.width * 0.18, walletRect.center.dy),
       fontSize: size.x * 0.022,
       color: const Color(0xFFC9A96A),
@@ -1500,10 +1553,10 @@ class RedBlackPokerGame extends FlameGame {
     final g = _geometry;
     final top = g.statusTop;
     final panelHeight = g.statusPanels.first.height;
-    final labels = <String>['BET', 'CREDITS', 'WIN'];
+    final labels = <String>['BET', 'CASH', 'WIN'];
     final values = <String>[
       round.bet.toString(),
-      round.credits.toString(),
+      round.cash.toString(),
       round.pendingWin.toString(),
     ];
 
@@ -1849,16 +1902,16 @@ class _CabinetGeometry {
     );
   }
 
-  // Keep all five live card components the same size and centered over the
-  // five illustrated cabinet wells.  The previous hand-tuned rectangles had
-  // slightly different widths, which made the card faces look progressively
-  // misaligned across the row.
+  // Calibrated to the five illustrated wells in master_halloween_cabinet.
+  // The wells are not laid out on the same 172px cadence as the first pass;
+  // using their real centers removes the left-to-right drift.  The row is also
+  // lowered slightly so the live faces sit vertically inside the gold frames.
   List<ui.Rect> get cardRects => <ui.Rect>[
-        _src(40, 886, 198, 1090),
-        _src(212, 886, 370, 1090),
-        _src(384, 886, 542, 1090),
-        _src(556, 886, 714, 1090),
-        _src(728, 886, 886, 1090),
+        _src(24, 894, 182, 1098),
+        _src(202, 894, 360, 1098),
+        _src(380, 894, 538, 1098),
+        _src(558, 894, 716, 1098),
+        _src(736, 894, 894, 1098),
       ];
 
   List<ui.Rect> get statusValueMasks => <ui.Rect>[
