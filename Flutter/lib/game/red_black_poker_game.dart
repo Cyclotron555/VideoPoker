@@ -878,6 +878,8 @@ class RedBlackPokerGame extends FlameGame {
     final g = _geometry;
 
 
+    _renderPayoutValues(canvas);
+
     // Swap the entire zombie strip as progress changes.  State 0 is all dark,
     // state 1 reveals head 1, ... state 10 reveals all ten.
     final zombieAtlas = _zombieProgressAtlas;
@@ -938,6 +940,61 @@ class RedBlackPokerGame extends FlameGame {
         weight: FontWeight.w900,
         centered: true,
       );
+    }
+  }
+
+  void _renderPayoutValues(ui.Canvas canvas) {
+    // Hand names are baked permanently into the cabinet artwork.
+    // Only these payout numbers change with the selected bet.
+    const leftRanks = <HandRank>[
+      HandRank.fiveOfAKind,
+      HandRank.royalFlush,
+      HandRank.straightFlush,
+      HandRank.fourOfAKind,
+      HandRank.fullHouse,
+    ];
+    const rightRanks = <HandRank>[
+      HandRank.flush,
+      HandRank.straight,
+      HandRank.threeOfAKind,
+      HandRank.twoPair,
+      HandRank.none,
+    ];
+
+    final g = _geometry;
+    for (var row = 0; row < 5; row++) {
+      final y = g.payoutRowY(row);
+      _paintText(
+        canvas,
+        (leftRanks[row].basePayout * round.bet).toString(),
+        ui.Offset(g.leftPayoutX, y),
+        fontSize: size.x * 0.026,
+        color: const Color(0xFFB31F16),
+        weight: FontWeight.w900,
+        centered: true,
+      );
+
+      if (row < 4) {
+        _paintText(
+          canvas,
+          (rightRanks[row].basePayout * round.bet).toString(),
+          ui.Offset(g.rightPayoutX, y),
+          fontSize: size.x * 0.026,
+          color: const Color(0xFFB31F16),
+          weight: FontWeight.w900,
+          centered: true,
+        );
+      } else {
+        _paintText(
+          canvas,
+          (5 * round.bet).toString(),
+          ui.Offset(g.rightPayoutX, y),
+          fontSize: size.x * 0.026,
+          color: const Color(0xFFB31F16),
+          weight: FontWeight.w900,
+          centered: true,
+        );
+      }
     }
   }
 
@@ -1814,6 +1871,11 @@ class _CabinetGeometry {
   double get side => w * 0.04;
   double get gap => w * 0.012;
   double get buttonGap => w * 0.012;
+
+  double get leftPayoutX => _src(432, 0, 432, 0).left;
+  double get rightPayoutX => _src(802, 0, 802, 0).left;
+  double payoutRowY(int row) =>
+      _src(0, 555 + row * 28, 0, 555 + row * 28).top;
 
   ui.Rect get zombieProgressStrip => _src(39, 744, 866, 888);
 
