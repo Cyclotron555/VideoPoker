@@ -33,7 +33,6 @@ class RedBlackPokerGame extends FlameGame {
   ui.Image? _controlPanelHeaderArt;
   ui.Image? _horrorCardsAtlas;
   ui.Image? _masterCabinetArt;
-  ui.Image? _controlAtlas;
 
   final AutoHoldAdvisor _autoHoldAdvisor = const AutoHoldAdvisor();
   Duration cardDisplayDelay = const Duration(milliseconds: 275);
@@ -107,7 +106,6 @@ class RedBlackPokerGame extends FlameGame {
     _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
     _masterCabinetArt = await images.load('master_halloween_cabinet.png');
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
-    _controlAtlas = await images.load('rbp_control_atlas.png');
 
     for (var i = 0; i < 10; i++) {
       _zombieHeadImages.add(
@@ -140,17 +138,11 @@ class RedBlackPokerGame extends FlameGame {
       label: 'DRAW',
       accent: const Color(0xFFBD1722),
       onPressed: _mainDrawPressed,
-      spriteAtlas: _controlAtlas,
-      offSrc: const ui.Rect.fromLTWH(256, 47, 128, 50),
-      onSrc: const ui.Rect.fromLTWH(384, 46, 128, 52),
     );
     _betDownButton = _GameButton(
       integrated: true,
       label: 'BET -',
       accent: const Color(0xFF8E4D0B),
-      spriteAtlas: _controlAtlas,
-      offSrc: const ui.Rect.fromLTWH(0, 0, 128, 44),
-      onSrc: const ui.Rect.fromLTWH(128, 0, 128, 44),
       onPressed: () {
         round.changeBet(-1);
         _syncView();
@@ -160,9 +152,6 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'BET +',
       accent: const Color(0xFFB46D0B),
-      spriteAtlas: _controlAtlas,
-      offSrc: const ui.Rect.fromLTWH(256, 0, 128, 44),
-      onSrc: const ui.Rect.fromLTWH(384, 1, 128, 43),
       onPressed: () {
         round.changeBet(1);
         _syncView();
@@ -172,9 +161,6 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'TRANSFER TO CASH',
       accent: const Color(0xFF8E4D0B),
-      spriteAtlas: _controlAtlas,
-      offSrc: const ui.Rect.fromLTWH(0, 52, 128, 41),
-      onSrc: const ui.Rect.fromLTWH(128, 52, 128, 41),
       onPressed: () {
         round.transferToCash();
         _syncView();
@@ -193,9 +179,6 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'ADD MONEY',
       accent: const Color(0xFF365A72),
-      spriteAtlas: _controlAtlas,
-      offSrc: const ui.Rect.fromLTWH(0, 102, 128, 41),
-      onSrc: const ui.Rect.fromLTWH(128, 102, 128, 40),
       onPressed: () {
         round.addMoney();
         _syncView();
@@ -964,37 +947,18 @@ class RedBlackPokerGame extends FlameGame {
       centered: true,
     );
 
-    _paintBottomSpritePanels(canvas, g);
-  }
-
-  void _paintBottomSpritePanels(ui.Canvas canvas, _CabinetGeometry g) {
-    final atlas = _controlAtlas;
-    if (atlas == null) return;
-
-    const sources = <ui.Rect>[
-      ui.Rect.fromLTWH(0, 157, 170, 50),
-      ui.Rect.fromLTWH(170, 156, 170, 53),
-      ui.Rect.fromLTWH(340, 157, 170, 51),
-    ];
-    final values = <String>[
+    final bottomValues = <String>[
       round.cash.toString(),
       round.wallet.toString(),
       round.totalFunds.toString(),
     ];
-
-    for (var i = 0; i < 3; i++) {
-      final dst = g.bottomPanelRects[i];
-      canvas.drawImageRect(
-        atlas,
-        sources[i],
-        dst,
-        ui.Paint()..filterQuality = ui.FilterQuality.high,
-      );
+    for (var i = 0; i < g.bottomValueMasks.length; i++) {
+      final r = g.bottomValueMasks[i];
       _paintText(
         canvas,
-        values[i],
-        ui.Offset(dst.center.dx, dst.center.dy + dst.height * 0.09),
-        fontSize: size.x * 0.029,
+        bottomValues[i],
+        ui.Offset(r.center.dx, r.center.dy + r.height * 0.16),
+        fontSize: size.x * 0.027,
         color: const Color(0xFFFFE06A),
         weight: FontWeight.w900,
         centered: true,
@@ -2280,18 +2244,12 @@ class _GameButton extends PositionComponent with TapCallbacks {
     required this.accent,
     required this.onPressed,
     this.integrated = false,
-    this.spriteAtlas,
-    this.offSrc,
-    this.onSrc,
   });
 
   String label;
   Color accent;
   final VoidCallback onPressed;
   final bool integrated;
-  final ui.Image? spriteAtlas;
-  final ui.Rect? offSrc;
-  final ui.Rect? onSrc;
   bool enabled = true;
   bool lit = false;
   bool _pressed = false;
@@ -2326,23 +2284,72 @@ class _GameButton extends PositionComponent with TapCallbacks {
     if (size.x <= 0 || size.y <= 0) return;
 
     if (integrated) {
-      final atlas = spriteAtlas;
-      final src = enabled && lit ? onSrc : offSrc;
-      if (atlas != null && src != null) {
-        final target = ui.Rect.fromLTWH(0, 0, size.x, size.y);
-        final scale = math.min(target.width / src.width, target.height / src.height);
-        final fitted = ui.Rect.fromCenter(
-          center: target.center,
-          width: src.width * scale,
-          height: src.height * scale,
-        );
-        canvas.drawImageRect(
-          atlas,
-          src,
-          fitted,
-          ui.Paint()..filterQuality = ui.FilterQuality.high,
-        );
-      }
+      final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+      final outer = rect.deflate(size.x * 0.02);
+      final inner = outer.deflate(size.x * 0.035);
+
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(outer, const ui.Radius.circular(7)),
+        ui.Paint()
+          ..shader = ui.Gradient.linear(
+            outer.topCenter,
+            outer.bottomCenter,
+            const <Color>[
+              Color(0xFF6A4A2A),
+              Color(0xFF24150E),
+              Color(0xFF8B6334),
+            ],
+          ),
+      );
+      final faceColor = !enabled
+          ? const Color(0xFF3B1613)
+          : (lit ? const Color(0xFFB62016) : const Color(0xFF711811));
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(inner, const ui.Radius.circular(5)),
+        ui.Paint()..color = faceColor,
+      );
+      canvas.drawRRect(
+        ui.RRect.fromRectAndRadius(inner, const ui.Radius.circular(5)),
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = math.max(1.0, size.x * 0.012)
+          ..color = lit && enabled
+              ? const Color(0xFFFFA31A)
+              : const Color(0xFFD2A14A),
+      );
+
+      final fontScale = label.length > 12
+          ? 0.075
+          : label.length > 8
+              ? 0.095
+              : 0.15;
+      final p = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: enabled
+                ? const Color(0xFFFFE6A8)
+                : const Color(0xFF9B8D78),
+            fontWeight: FontWeight.w900,
+            fontSize: size.x * fontScale,
+            height: 0.95,
+            shadows: lit && enabled
+                ? const <Shadow>[
+                    Shadow(color: Color(0xFFFF6A00), blurRadius: 5),
+                  ]
+                : null,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: inner.width * 0.90);
+      p.paint(
+        canvas,
+        ui.Offset(
+          inner.center.dx - p.width / 2,
+          inner.center.dy - p.height / 2,
+        ),
+      );
       return;
     }
 
