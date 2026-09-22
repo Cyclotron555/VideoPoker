@@ -33,7 +33,6 @@ class RedBlackPokerGame extends FlameGame {
   ui.Image? _controlPanelHeaderArt;
   ui.Image? _horrorCardsAtlas;
   ui.Image? _masterCabinetArt;
-  ui.Image? _controlClusterFrame;
   ui.Image? _zombieProgressAtlas;
   ui.Image? _halloweenButtonsAtlas;
   final Map<String, ui.Image> _approvedButtonSprites = <String, ui.Image>{};
@@ -109,7 +108,6 @@ class RedBlackPokerGame extends FlameGame {
     _bottomPanelArt = await images.load('bottom_panel.jpg');
     _controlPanelHeaderArt = await images.load('control_panel_header.jpg');
     _masterCabinetArt = await images.load('master_halloween_cabinet_v5.png');
-    _controlClusterFrame = await images.load('control_cluster_frame.png');
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
     _zombieProgressAtlas = await images.load('zombie_progress_atlas.png');
     _halloweenButtonsAtlas = await images.load('halloween_buttons_atlas.png');
@@ -900,23 +898,54 @@ class RedBlackPokerGame extends FlameGame {
   void _renderMasterDynamic(ui.Canvas canvas) {
     final g = _geometry;
 
-    // One unified gothic panel sits above the cabinet artwork and behind the
-    // six framed button sprites. The button sprites remain independent and are
-    // rendered later by Flame components.
-    final controlFrame = _controlClusterFrame;
-    if (controlFrame != null) {
-      canvas.drawImageRect(
-        controlFrame,
-        ui.Rect.fromLTWH(
-          0,
-          0,
-          controlFrame.width.toDouble(),
-          controlFrame.height.toDouble(),
+    // Cover legacy baked card wells before the live framed card sprites render.
+    // This removes the second/old frame visible around each card.
+    final cardBacking = g.cardRowBacking;
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(
+        cardBacking,
+        const ui.Radius.circular(5),
+      ),
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          cardBacking.topCenter,
+          cardBacking.bottomCenter,
+          const <Color>[
+            Color(0xFF090A0D),
+            Color(0xFF020305),
+          ],
         ),
-        g.controlClusterFrame,
-        ui.Paint()..filterQuality = ui.FilterQuality.high,
-      );
-    }
+    );
+
+    // One clean backing panel behind the six framed controls.  No individual
+    // button wells are drawn here because every approved button sprite already
+    // contains its own complete gothic frame.
+    final controlBacking = g.controlClusterFrame;
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(
+        controlBacking,
+        const ui.Radius.circular(7),
+      ),
+      ui.Paint()
+        ..shader = ui.Gradient.linear(
+          controlBacking.topCenter,
+          controlBacking.bottomCenter,
+          const <Color>[
+            Color(0xFF111216),
+            Color(0xFF050608),
+          ],
+        ),
+    );
+    canvas.drawRRect(
+      ui.RRect.fromRectAndRadius(
+        controlBacking,
+        const ui.Radius.circular(7),
+      ),
+      ui.Paint()
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = math.max(1.2, size.x * 0.003)
+        ..color = const Color(0xFF6F4B28),
+    );
 
 
     _renderPayoutValues(canvas);
@@ -1956,8 +1985,9 @@ class _CabinetGeometry {
   ui.Rect get betMaxButton => _src(612, 1193, 862, 1275);
   ui.Rect get drawButton => betMaxButton;
 
-  // Unified framed backing panel for the six main controls.
-  // It intentionally sits behind the independent button sprites.
+  // Clean backing strips hide the obsolete frames baked into older cabinet art.
+  // Live cards and buttons render later, above these strips.
+  ui.Rect get cardRowBacking => _src(38, 915, 867, 1190);
   ui.Rect get controlClusterFrame => _src(38, 1168, 867, 1395);
 
   ui.Rect get cashOutButton => _src(55, 1286, 260, 1361);
