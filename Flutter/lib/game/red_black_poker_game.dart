@@ -1885,6 +1885,23 @@ class _CabinetGeometry {
 
   ui.Rect get settingsButton => _src(862, 30, 930, 105);
 
+  // Compatibility geometry retained for legacy render helpers. The active
+  // main-game renderer uses the approved full-screen cabinet artwork.
+  ui.Rect get titleBanner => _src(145, 85, 800, 470);
+  ui.Rect get zombieFrame => _src(43, 700, 895, 836);
+  ui.Rect get payTable => _src(86, 489, 855, 684);
+
+  double get statusTop => _src(0, 1112, 0, 1112).top;
+  double get statusMessageY => _src(0, 851, 0, 851).top;
+
+  List<ui.Rect> get statusPanels => <ui.Rect>[
+        _src(42, 1111, 286, 1185),
+        _src(300, 1111, 632, 1185),
+        _src(646, 1111, 891, 1185),
+      ];
+
+  ui.Rect get bottomArt => _src(38, 1376, 905, 1567);
+
   ui.Rect get controlPanel => _src(45, 1110, 891, 1369);
   ui.Rect get walletStrip => _src(270, 1293, 648, 1367);
 
