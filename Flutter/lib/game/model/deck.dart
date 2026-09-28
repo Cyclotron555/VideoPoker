@@ -3,18 +3,35 @@ import 'dart:math';
 import 'playing_card.dart';
 
 class Deck {
-  Deck({Random? random}) : _random = random ?? Random.secure() {
+  Deck({Random? random})
+      : _random = random ?? Random.secure(),
+        _fixedDrawOrder = null {
+    reset();
+  }
+
+  Deck.fixed(List<PlayingCard> drawOrder)
+      : assert(drawOrder.isNotEmpty),
+        _random = Random(0),
+        _fixedDrawOrder = List<PlayingCard>.unmodifiable(drawOrder) {
     reset();
   }
 
   final Random _random;
+  final List<PlayingCard>? _fixedDrawOrder;
   final List<PlayingCard> _cards = <PlayingCard>[];
 
   int get remaining => _cards.length;
 
   void reset() {
+    _cards.clear();
+
+    final fixed = _fixedDrawOrder;
+    if (fixed != null) {
+      _cards.addAll(fixed.reversed);
+      return;
+    }
+
     _cards
-      ..clear()
       ..addAll(
         List<PlayingCard>.generate(
           53,
