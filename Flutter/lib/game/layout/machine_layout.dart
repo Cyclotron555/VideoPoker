@@ -9,8 +9,8 @@ import 'dart:ui' as ui;
 class MachineLayout {
   const MachineLayout(this.viewportWidth, this.viewportHeight);
 
-  static const double designWidth = 905.0;
-  static const double designHeight = 1738.0;
+  static const double designWidth = 963.0;
+  static const double designHeight = 1633.0;
 
   final double viewportWidth;
   final double viewportHeight;
