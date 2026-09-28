@@ -6,6 +6,7 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'layout/machine_layout.dart';
 import 'model/auto_hold_advisor.dart';
@@ -354,7 +355,8 @@ class RedBlackPokerGame extends FlameGame {
       label: '>',
       accent: const Color(0xFF5E3B25),
       onPressed: () {
-            _syncView();
+        _cardBackVariant = (_cardBackVariant + 1) % 4;
+        _syncView();
       },
     );
 
@@ -1270,6 +1272,7 @@ class RedBlackPokerGame extends FlameGame {
         fontSize: labelSize,
         color: const Color(0xFF321A0E),
         weight: FontWeight.w900,
+        halloweenFont: true,
       );
       _paintText(
         canvas,
@@ -1288,6 +1291,7 @@ class RedBlackPokerGame extends FlameGame {
         fontSize: labelSize,
         color: const Color(0xFF321A0E),
         weight: FontWeight.w900,
+        halloweenFont: true,
       );
       _paintText(
         canvas,
@@ -2136,16 +2140,26 @@ class RedBlackPokerGame extends FlameGame {
     required Color color,
     FontWeight weight = FontWeight.w500,
     bool centered = false,
+    bool halloweenFont = false,
   }) {
+    final style = halloweenFont
+        ? GoogleFonts.pirataOne(
+            color: color,
+            fontSize: fontSize,
+            fontWeight: FontWeight.w400,
+            height: 1,
+          )
+        : TextStyle(
+            color: color,
+            fontSize: fontSize,
+            fontWeight: weight,
+            height: 1,
+          );
+
     final painter = TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(
-          color: color,
-          fontSize: fontSize,
-          fontWeight: weight,
-          height: 1,
-        ),
+        style: style,
       ),
       textDirection: TextDirection.ltr,
       maxLines: 1,
