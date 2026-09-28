@@ -80,4 +80,28 @@ void main() {
 
     expect(evaluator.evaluate(hand), HandRank.twoPair);
   });
+  test('Q-J-K-9-A mixed suits is not a winning hand', () {
+    final hand = <PlayingCard>[
+      c(12, CardSuit.spades),
+      c(11, CardSuit.clubs),
+      c(13, CardSuit.hearts),
+      c(9, CardSuit.clubs),
+      c(1, CardSuit.hearts),
+    ];
+
+    expect(evaluator.evaluate(hand), HandRank.none);
+  });
+
+  test('10-J-Q-K-A mixed suits is a straight', () {
+    final hand = <PlayingCard>[
+      c(10, CardSuit.clubs),
+      c(11, CardSuit.clubs),
+      c(12, CardSuit.spades),
+      c(13, CardSuit.hearts),
+      c(1, CardSuit.hearts),
+    ];
+
+    expect(evaluator.evaluate(hand), HandRank.straight);
+  });
+
 }
