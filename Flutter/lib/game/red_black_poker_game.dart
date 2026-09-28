@@ -219,6 +219,7 @@ class RedBlackPokerGame extends FlameGame {
       spriteAtlas: betSheet,
       offSrc: cell(betSheet, 2, 2, 0, 0),
       onSrc: cell(betSheet, 2, 2, 0, 1),
+      offSourceInsetFraction: 0.055,
       onPressed: () {
         round.changeBet(-1);
         _syncView();
@@ -231,6 +232,7 @@ class RedBlackPokerGame extends FlameGame {
       spriteAtlas: betSheet,
       offSrc: cell(betSheet, 2, 2, 1, 0),
       onSrc: cell(betSheet, 2, 2, 1, 1),
+      offSourceInsetFraction: 0.055,
       onPressed: () {
         round.changeBet(1);
         _syncView();
@@ -2589,6 +2591,7 @@ class _GameButton extends PositionComponent with TapCallbacks {
     this.offImage,
     this.onImage,
     this.exactCropBottomFraction = 0.18,
+    this.offSourceInsetFraction = 0.0,
   });
 
   String label;
@@ -2601,6 +2604,7 @@ class _GameButton extends PositionComponent with TapCallbacks {
   final ui.Image? offImage;
   final ui.Image? onImage;
   final double exactCropBottomFraction;
+  final double offSourceInsetFraction;
   bool enabled = true;
   bool lit = false;
   bool _pressed = false;
@@ -2659,15 +2663,31 @@ class _GameButton extends PositionComponent with TapCallbacks {
       }
 
       final atlas = spriteAtlas;
-      final src = enabled && lit ? onSrc : offSrc;
+      final usingOn = enabled && lit;
+      final src = usingOn ? onSrc : offSrc;
       if (atlas != null && src != null) {
         final target = ui.Rect.fromLTWH(0, 0, size.x, size.y);
-        // These button sheets were authored as resizable UI sprites. Fill the
-        // assigned matrix slot exactly so every ON/OFF state has identical
-        // screen geometry.
+        var source = src;
+
+        // Some generated OFF sprites have more transparent breathing room than
+        // their lit counterparts. Crop only that transparent margin so OFF and
+        // ON states occupy the same visible footprint without changing hitboxes.
+        if (!usingOn && offSourceInsetFraction > 0) {
+          final fx = (src.width * offSourceInsetFraction)
+              .clamp(0.0, src.width * 0.20);
+          final fy = (src.height * offSourceInsetFraction)
+              .clamp(0.0, src.height * 0.20);
+          source = ui.Rect.fromLTRB(
+            src.left + fx,
+            src.top + fy,
+            src.right - fx,
+            src.bottom - fy,
+          );
+        }
+
         canvas.drawImageRect(
           atlas,
-          src,
+          source,
           target,
           ui.Paint()..filterQuality = ui.FilterQuality.high,
         );
