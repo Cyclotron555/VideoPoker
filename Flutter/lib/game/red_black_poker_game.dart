@@ -8,6 +8,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'layout/card_art_mapping.dart';
 import 'layout/machine_layout.dart';
 import 'model/auto_hold_advisor.dart';
 import 'model/hand_rank.dart';
@@ -826,34 +827,9 @@ class RedBlackPokerGame extends FlameGame {
     _hideButton(_collectButton);
   }
 
-  int _horrorAtlasColumn(int rank) {
-    return switch (rank) {
-      1 => 0,
-      13 => 1,
-      12 => 2,
-      11 => 3,
-      10 => 4,
-      9 => 5,
-      8 => 6,
-      7 => 7,
-      6 => 8,
-      5 => 9,
-      4 => 10,
-      3 => 11,
-      2 => 12,
-      _ => 0,
-    };
-  }
+  int _horrorAtlasColumn(int rank) => horrorAtlasColumnForRank(rank);
 
-  int _horrorAtlasRow(CardSuit? suit) {
-    return switch (suit) {
-      CardSuit.hearts => 0,
-      CardSuit.diamonds => 1,
-      CardSuit.clubs => 2,
-      CardSuit.spades => 3,
-      null => 0,
-    };
-  }
+  int _horrorAtlasRow(CardSuit? suit) => horrorAtlasRowForSuit(suit);
 
   List<bool> _winningCardMask() {
     final mask = List<bool>.filled(5, false);
