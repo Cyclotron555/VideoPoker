@@ -45,6 +45,8 @@ class RedBlackPokerGame extends FlameGame {
   bool _isAnimatingCards = false;
   bool _redBlackMode = false;
   bool _controlPanelOpen = false;
+  // Temporary engineering overlay. It only visualizes matrix slots.
+  bool _showLayoutDebug = true;
   GameThemeId _selectedTheme = GameThemeId.halloween;
   int _handsPlayed = 0;
   int _handsWon = 0;
@@ -873,6 +875,64 @@ class RedBlackPokerGame extends FlameGame {
       _renderMasterDynamic(canvas);
     }
     super.render(canvas);
+
+    if (_showLayoutDebug && !_controlPanelOpen && !_redBlackMode) {
+      _renderLayoutDebug(canvas);
+    }
+  }
+
+  void _renderLayoutDebug(ui.Canvas canvas) {
+    final g = _geometry;
+
+    void box(ui.Rect rect, String label, Color stroke) {
+      canvas.drawRect(rect, ui.Paint()..color = const Color(0x18000000));
+      canvas.drawRect(
+        rect,
+        ui.Paint()
+          ..style = ui.PaintingStyle.stroke
+          ..strokeWidth = math.max(1.5, size.x * 0.003)
+          ..color = stroke,
+      );
+
+      final painter = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: const Color(0xFFFFFFFF),
+            backgroundColor: const Color(0xCC000000),
+            fontSize: math.max(9.0, size.x * 0.018),
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+      )..layout(maxWidth: math.max(1.0, rect.width - 4));
+
+      painter.paint(canvas, ui.Offset(rect.left + 2, rect.top + 2));
+    }
+
+    box(g.payTableTextArea, 'PAYTABLE', const Color(0xFF40C4FF));
+    box(g.zombieProgressStrip, 'ZOMBIE STRIP', const Color(0xFF69F0AE));
+
+    for (var i = 0; i < g.zombieSlots.length; i++) {
+      box(g.zombieSlots[i], 'Z${i + 1}', const Color(0xFF69F0AE));
+    }
+    for (var i = 0; i < g.cardRects.length; i++) {
+      box(g.cardRects[i], 'CARD ${i + 1}', const Color(0xFFFF80AB));
+    }
+
+    box(g.betDownButton, 'BET -', const Color(0xFFFFAB40));
+    box(g.betUpButton, 'BET +', const Color(0xFFFFAB40));
+    box(g.dealButton, 'TRANSFER', const Color(0xFFFFAB40));
+    box(g.drawButton, 'DRAW', const Color(0xFFFF5252));
+    box(g.cashOutButton, 'CASH OUT', const Color(0xFFB388FF));
+    box(g.insertCoinsButton, 'ADD MONEY', const Color(0xFF82B1FF));
+    box(g.walletValueMask, 'WALLET READOUT', const Color(0xFFFFFF00));
+
+    const bottomLabels = <String>['BANK', 'WALLET', 'MACHINE'];
+    for (var i = 0; i < g.bottomValueMasks.length; i++) {
+      box(g.bottomValueMasks[i], bottomLabels[i], const Color(0xFFFFFF00));
+    }
   }
 
   void _renderMasterCabinet(ui.Canvas canvas) {
