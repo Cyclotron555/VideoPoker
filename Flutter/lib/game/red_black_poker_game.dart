@@ -1262,7 +1262,7 @@ class RedBlackPokerGame extends FlameGame {
 
     for (var row = 0; row < 5; row++) {
       final y = g.payoutRowY(row);
-      final labelSize = g.machine.scale * 30;
+      final labelSize = g.machine.scale * 28;
       final valueSize = g.machine.scale * 31;
 
       _paintText(
@@ -2189,9 +2189,9 @@ class _CabinetGeometry {
   ui.Rect get handPanel => _src(40, 835, 923, 1190);
 
   double get leftPayoutLabelX => _src(150, 0, 150, 0).left;
-  double get leftPayoutX => _src(390, 0, 390, 0).left;
+  double get leftPayoutX => _src(410, 0, 410, 0).left;
   double get rightPayoutLabelX => _src(475, 0, 475, 0).left;
-  double get rightPayoutX => _src(755, 0, 755, 0).left;
+  double get rightPayoutX => _src(780, 0, 780, 0).left;
   double payoutRowY(int row) =>
       _src(0, 432 + row * 47, 0, 432 + row * 47).top;
 
