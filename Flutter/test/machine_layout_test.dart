@@ -42,10 +42,10 @@ void main() {
   });
 
   test('wide viewport uses one uniform scale and horizontal letterboxing', () {
-    const layout = MachineLayout(2000, 1738);
+    const layout = MachineLayout(2000, 1633);
 
     expect(layout.scale, closeTo(1, 1e-9));
-    expect(layout.contentHeight, closeTo(1738, 1e-6));
+    expect(layout.contentHeight, closeTo(1633, 1e-6));
     expect(layout.offsetX, greaterThan(0));
     expect(layout.offsetY, closeTo(0, 1e-6));
   });
