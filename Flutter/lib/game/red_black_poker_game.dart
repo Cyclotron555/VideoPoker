@@ -354,8 +354,7 @@ class RedBlackPokerGame extends FlameGame {
       label: '>',
       accent: const Color(0xFF5E3B25),
       onPressed: () {
-        _cardBackVariant = (_cardBackVariant + 1) % 4;
-        _syncView();
+            _syncView();
       },
     );
 
