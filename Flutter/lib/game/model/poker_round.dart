@@ -12,6 +12,36 @@ enum RoundPhase {
   bonusReady,
 }
 
+class RoundControlState {
+  const RoundControlState({
+    required this.betMinus,
+    required this.betPlus,
+    required this.transferToCash,
+    required this.cashOut,
+    required this.addMoney,
+    required this.draw,
+    required this.holdCards,
+  });
+
+  final bool betMinus;
+  final bool betPlus;
+  final bool transferToCash;
+  final bool cashOut;
+  final bool addMoney;
+  final bool draw;
+  final bool holdCards;
+
+  static const disabled = RoundControlState(
+    betMinus: false,
+    betPlus: false,
+    transferToCash: false,
+    cashOut: false,
+    addMoney: false,
+    draw: false,
+    holdCards: false,
+  );
+}
+
 class PokerRound {
   PokerRound({
     Deck? deck,
@@ -72,6 +102,10 @@ class PokerRound {
   bool get canChangeBet =>
       phase == RoundPhase.idle || phase == RoundPhase.result;
 
+  bool get canBetDown => canChangeBet && bet > minBet;
+
+  bool get canBetUp => canChangeBet && bet < maxBet;
+
   // Compatibility getters retained for older tests/callers.
   bool get canInsertCoins => canTransferToCash;
   bool get canRefillWallet => canAdjustMoney && wallet == 0;
@@ -86,6 +120,46 @@ class PokerRound {
 
   bool get hasPendingWin =>
       phase == RoundPhase.winDecision && pendingWin > 0;
+
+  RoundControlState get controls {
+    switch (phase) {
+      case RoundPhase.idle:
+      case RoundPhase.result:
+        return RoundControlState(
+          betMinus: canBetDown,
+          betPlus: canBetUp,
+          transferToCash: canTransferToCash,
+          cashOut: canCashOut,
+          addMoney: canAddMoney,
+          draw: canStartHand,
+          holdCards: false,
+        );
+      case RoundPhase.chooseHolds:
+        return const RoundControlState(
+          betMinus: false,
+          betPlus: false,
+          transferToCash: false,
+          cashOut: false,
+          addMoney: false,
+          draw: true,
+          holdCards: true,
+        );
+      case RoundPhase.winDecision:
+        // The six-button cabinet uses DRAW as collect-and-continue after a win.
+        return const RoundControlState(
+          betMinus: false,
+          betPlus: false,
+          transferToCash: false,
+          cashOut: false,
+          addMoney: false,
+          draw: true,
+          holdCards: false,
+        );
+      case RoundPhase.doubleUp:
+      case RoundPhase.bonusReady:
+        return RoundControlState.disabled;
+    }
+  }
 
   int payoutFor(HandRank rank) => rank.basePayout * bet;
 
