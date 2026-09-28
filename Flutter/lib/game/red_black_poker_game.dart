@@ -38,6 +38,18 @@ class RedBlackPokerGame extends FlameGame {
   ui.Image? _halloweenButtonsAtlas;
   final Map<String, ui.Image> _approvedButtonSprites = <String, ui.Image>{};
 
+  // Layered Halloween cabinet assets.
+  ui.Image? _layerBackground;
+  ui.Image? _cashPanel;
+  ui.Image? _payoutPanel;
+  ui.Image? _cabinetSpriteSheet;
+  ui.Image? _handPanel;
+  ui.Image? _betButtonsSheet;
+  ui.Image? _transferButtonSheet;
+  ui.Image? _drawButtonSheet;
+  ui.Image? _cashOutButtonSheet;
+  ui.Image? _addMoneyButtonSheet;
+
   final AutoHoldAdvisor _autoHoldAdvisor = const AutoHoldAdvisor();
   Duration cardDisplayDelay = const Duration(milliseconds: 275);
   Duration autoHoldInitialDelay = const Duration(milliseconds: 120);
@@ -46,7 +58,7 @@ class RedBlackPokerGame extends FlameGame {
   bool _redBlackMode = false;
   bool _controlPanelOpen = false;
   // Temporary engineering overlay. It only visualizes matrix slots.
-  bool _showLayoutDebug = true;
+  bool _showLayoutDebug = false;
   GameThemeId _selectedTheme = GameThemeId.halloween;
   int _handsPlayed = 0;
   int _handsWon = 0;
@@ -114,6 +126,16 @@ class RedBlackPokerGame extends FlameGame {
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
     _zombieProgressAtlas = await images.load('zombie_progress_atlas.png');
     _halloweenButtonsAtlas = await images.load('halloween_buttons_atlas.png');
+    _layerBackground = await images.load('background001.png');
+    _cashPanel = await images.load('cash_panel.png');
+    _payoutPanel = await images.load('payout_panel.png');
+    _cabinetSpriteSheet = await images.load('cabinet_sprite_sheet.png');
+    _handPanel = await images.load('your_hand_panel.png');
+    _betButtonsSheet = await images.load('bet_buttons.png');
+    _transferButtonSheet = await images.load('transfer_to_cash_button.png');
+    _drawButtonSheet = await images.load('draw_button.png');
+    _cashOutButtonSheet = await images.load('cash_out_button.png');
+    _addMoneyButtonSheet = await images.load('add_money_button.png');
     for (final name in <String>[
       'bet_minus_off_approved.png',
       'bet_minus_on_approved.png',
@@ -157,20 +179,45 @@ class RedBlackPokerGame extends FlameGame {
       await add(view);
     }
 
+    final betSheet = _betButtonsSheet!;
+    final transferSheet = _transferButtonSheet!;
+    final drawSheet = _drawButtonSheet!;
+    final cashOutSheet = _cashOutButtonSheet!;
+    final addMoneySheet = _addMoneyButtonSheet!;
+
+    ui.Rect cell(
+      ui.Image sheet,
+      int columns,
+      int rows,
+      int column,
+      int row,
+    ) {
+      final cellW = sheet.width / columns;
+      final cellH = sheet.height / rows;
+      return ui.Rect.fromLTWH(
+        column * cellW,
+        row * cellH,
+        cellW,
+        cellH,
+      );
+    }
+
     _mainDrawButton = _GameButton(
       integrated: true,
       label: 'DRAW',
       accent: const Color(0xFFBD1722),
       onPressed: _mainDrawPressed,
-      offImage: _approvedButtonSprites['draw_off_approved.png'],
-      onImage: _approvedButtonSprites['draw_on_approved.png'],
+      spriteAtlas: drawSheet,
+      offSrc: cell(drawSheet, 1, 2, 0, 0),
+      onSrc: cell(drawSheet, 1, 2, 0, 1),
     );
     _betDownButton = _GameButton(
       integrated: true,
       label: 'BET -',
       accent: const Color(0xFF8E4D0B),
-      offImage: _approvedButtonSprites['bet_minus_off_approved.png'],
-      onImage: _approvedButtonSprites['bet_minus_on_approved.png'],
+      spriteAtlas: betSheet,
+      offSrc: cell(betSheet, 2, 2, 0, 0),
+      onSrc: cell(betSheet, 2, 2, 0, 1),
       onPressed: () {
         round.changeBet(-1);
         _syncView();
@@ -180,8 +227,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'BET +',
       accent: const Color(0xFFB46D0B),
-      offImage: _approvedButtonSprites['bet_plus_off_approved.png'],
-      onImage: _approvedButtonSprites['bet_plus_on_approved.png'],
+      spriteAtlas: betSheet,
+      offSrc: cell(betSheet, 2, 2, 1, 0),
+      onSrc: cell(betSheet, 2, 2, 1, 1),
       onPressed: () {
         round.changeBet(1);
         _syncView();
@@ -191,8 +239,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'TRANSFER TO CASH',
       accent: const Color(0xFF8E4D0B),
-      offImage: _approvedButtonSprites['transfer_to_cash_off_approved.png'],
-      onImage: _approvedButtonSprites['transfer_to_cash_on_approved.png'],
+      spriteAtlas: transferSheet,
+      offSrc: cell(transferSheet, 1, 2, 0, 0),
+      onSrc: cell(transferSheet, 1, 2, 0, 1),
       onPressed: () {
         round.transferToCash();
         _syncView();
@@ -202,8 +251,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'CASH OUT',
       accent: const Color(0xFF6D4A1C),
-      offImage: _approvedButtonSprites['cash_out_off_approved.png'],
-      onImage: _approvedButtonSprites['cash_out_on_approved.png'],
+      spriteAtlas: cashOutSheet,
+      offSrc: cell(cashOutSheet, 1, 2, 0, 0),
+      onSrc: cell(cashOutSheet, 1, 2, 0, 1),
       onPressed: () {
         round.cashOut();
         _syncView();
@@ -213,8 +263,9 @@ class RedBlackPokerGame extends FlameGame {
       integrated: true,
       label: 'ADD MONEY',
       accent: const Color(0xFF365A72),
-      offImage: _approvedButtonSprites['add_money_off_approved.png'],
-      onImage: _approvedButtonSprites['add_money_on_approved.png'],
+      spriteAtlas: addMoneySheet,
+      offSrc: cell(addMoneySheet, 1, 2, 0, 0),
+      onSrc: cell(addMoneySheet, 1, 2, 0, 1),
       onPressed: () {
         round.addMoney();
         _syncView();
@@ -729,12 +780,12 @@ class RedBlackPokerGame extends FlameGame {
     // The original game has one DRAW button for both stages of the hand.
     _mainDrawButton.label = 'DRAW';
     _mainDrawButton.accent = const Color(0xFFBD1722);
-    final moneyControls = !_isAnimatingCards && round.canAdjustMoney;
-    _betDownButton.enabled = moneyControls && round.bet > PokerRound.minBet;
-    _betUpButton.enabled = moneyControls && round.bet < PokerRound.maxBet;
-    _betMaxButton.enabled = !_isAnimatingCards && round.canTransferToCash;
-    _cashOutButton.enabled = !_isAnimatingCards && round.canCashOut;
-    _insertCoinsButton.enabled = !_isAnimatingCards && round.canAddMoney;
+    final controls = round.controls;
+    _betDownButton.enabled = !_isAnimatingCards && controls.betMinus;
+    _betUpButton.enabled = !_isAnimatingCards && controls.betPlus;
+    _betMaxButton.enabled = !_isAnimatingCards && controls.transferToCash;
+    _cashOutButton.enabled = !_isAnimatingCards && controls.cashOut;
+    _insertCoinsButton.enabled = !_isAnimatingCards && controls.addMoney;
     _refillWalletButton.enabled = false;
     _betDownButton.lit = _betDownButton.enabled;
     _betUpButton.lit = _betUpButton.enabled;
@@ -871,14 +922,84 @@ class RedBlackPokerGame extends FlameGame {
     } else if (_redBlackMode) {
       _renderRedBlack(canvas);
     } else {
-      _renderMasterCabinet(canvas);
-      _renderMasterDynamic(canvas);
+      _renderLayeredMain(canvas);
     }
+
     super.render(canvas);
 
     if (_showLayoutDebug && !_controlPanelOpen && !_redBlackMode) {
       _renderLayoutDebug(canvas);
     }
+  }
+
+  void _drawLayerAsset(ui.Canvas canvas, ui.Image? image, ui.Rect dest) {
+    if (image == null || dest.isEmpty) return;
+    canvas.drawImageRect(
+      image,
+      ui.Rect.fromLTWH(
+        0,
+        0,
+        image.width.toDouble(),
+        image.height.toDouble(),
+      ),
+      dest,
+      ui.Paint()..filterQuality = ui.FilterQuality.high,
+    );
+  }
+
+  void _renderLayeredMain(ui.Canvas canvas) {
+    final g = _geometry;
+    final viewport = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+    canvas.drawRect(viewport, ui.Paint()..color = const Color(0xFF030305));
+
+    _drawLayerAsset(canvas, _layerBackground, g.machine.contentRect);
+
+    _drawLayerAsset(canvas, _cashPanel, g.cashPanel);
+    _paintText(
+      canvas,
+      round.cash.toString(),
+      ui.Offset(
+        g.cashPanel.center.dx,
+        g.cashPanel.top + g.cashPanel.height * 0.68,
+      ),
+      fontSize: g.machine.scale * 38,
+      color: const Color(0xFFFFE32D),
+      weight: FontWeight.w900,
+      centered: true,
+    );
+
+    _drawLayerAsset(canvas, _payoutPanel, g.payoutPanel);
+    _renderPayoutTable(canvas);
+
+    final cabinet = _cabinetSpriteSheet;
+    if (cabinet != null) {
+      final state = round.bonusProgress.clamp(0, 10);
+      final rowH = cabinet.height / 11.0;
+      final src = ui.Rect.fromLTWH(
+        0,
+        state * rowH,
+        cabinet.width.toDouble(),
+        rowH,
+      );
+      canvas.drawImageRect(
+        cabinet,
+        src,
+        g.zombieProgressStrip,
+        ui.Paint()..filterQuality = ui.FilterQuality.high,
+      );
+    }
+
+    _drawLayerAsset(canvas, _handPanel, g.handPanel);
+
+    _paintText(
+      canvas,
+      'BET ' + round.bet.toString(),
+      g.betValueCenter,
+      fontSize: g.machine.scale * 22,
+      color: const Color(0xFFFFE3A0),
+      weight: FontWeight.w900,
+      centered: true,
+    );
   }
 
   void _renderLayoutDebug(ui.Canvas canvas) {
@@ -2058,23 +2179,21 @@ class _CabinetGeometry {
   final double h;
   final MachineLayout machine;
 
-  ui.Rect _src(double l, double t, double r, double b) {
-    return machine.rect(l, t, r, b);
-  }
+  ui.Rect _src(double l, double t, double r, double b) =>
+      machine.rect(l, t, r, b);
 
-  double get side => w * 0.04;
-  double get gap => w * 0.012;
-  double get buttonGap => w * 0.012;
+  ui.Rect get cashPanel => _src(300, 5, 663, 186);
+  ui.Rect get payoutPanel => _src(55, 135, 908, 704);
+  ui.Rect get payTableTextArea => _src(165, 410, 850, 640);
+  ui.Rect get zombieProgressStrip => _src(45, 695, 918, 840);
+  ui.Rect get handPanel => _src(42, 835, 921, 1128);
 
-  ui.Rect get payTableTextArea => _src(128, 532, 785, 690);
-  double get leftPayoutLabelX => _src(150, 0, 150, 0).left;
-  double get leftPayoutX => _src(410, 0, 410, 0).left;
-  double get rightPayoutLabelX => _src(500, 0, 500, 0).left;
-  double get rightPayoutX => _src(758, 0, 758, 0).left;
+  double get leftPayoutLabelX => _src(180, 0, 180, 0).left;
+  double get leftPayoutX => _src(450, 0, 450, 0).left;
+  double get rightPayoutLabelX => _src(520, 0, 520, 0).left;
+  double get rightPayoutX => _src(835, 0, 835, 0).left;
   double payoutRowY(int row) =>
-      _src(0, 550 + row * 29, 0, 550 + row * 29).top;
-
-  ui.Rect get zombieProgressStrip => _src(39, 744, 866, 888);
+      _src(0, 430 + row * 45, 0, 430 + row * 45).top;
 
   List<ui.Rect> get zombieSlots {
     final frame = zombieProgressStrip;
@@ -2090,92 +2209,85 @@ class _CabinetGeometry {
     );
   }
 
-  // Calibrated to the five illustrated wells in master_halloween_cabinet.
-  // The wells are not laid out on the same 172px cadence as the first pass;
-  // using their real centers removes the left-to-right drift.  The row is also
-  // lowered slightly so the live faces sit vertically inside the gold frames.
   List<ui.Rect> get cardRects => <ui.Rect>[
-        _src(36, 930, 184, 1182),
-        _src(210, 930, 358, 1182),
-        _src(384, 930, 532, 1182),
-        _src(558, 930, 706, 1182),
-        _src(732, 930, 880, 1182),
+        _src(75, 895, 212, 1110),
+        _src(244, 895, 381, 1110),
+        _src(413, 895, 550, 1110),
+        _src(582, 895, 719, 1110),
+        _src(751, 895, 888, 1110),
       ];
 
-  // Top control row is three visual slots:
-  //   1) BET- and BET+ share the first slot
-  //   2) TRANSFER TO CASH fills the second slot
-  //   3) DRAW fills the third slot
-  ui.Rect get betDownButton => _src(52, 1195, 180, 1273);
-  ui.Rect get betUpButton => _src(184, 1195, 312, 1273);
-  ui.Rect get dealButton => _src(326, 1193, 596, 1275);
-  ui.Rect get betMaxButton => _src(612, 1193, 862, 1275);
-  ui.Rect get drawButton => betMaxButton;
+  ui.Rect get betDownButton => _src(45, 1145, 215, 1257);
+  ui.Rect get betUpButton => _src(220, 1145, 390, 1257);
+  ui.Rect get dealButton => _src(400, 1145, 640, 1257);
+  ui.Rect get drawButton => _src(670, 1145, 915, 1257);
+  ui.Rect get betMaxButton => drawButton;
 
-  // Clean backing strips hide the obsolete frames baked into older cabinet art.
-  // Live cards and buttons render later, above these strips.
-  ui.Rect get cardRowBacking => _src(38, 915, 867, 1190);
-  // Extend the opaque control backing farther upward so every remnant of the
-  // legacy baked button captions/wells is covered before live sprites render.
-  ui.Rect get controlClusterFrame => _src(20, 1118, 885, 1412);
+  ui.Rect get cashOutButton => _src(120, 1270, 420, 1382);
+  ui.Rect get insertCoinsButton => _src(540, 1270, 840, 1382);
+  ui.Offset get betValueCenter => machine.point(217, 1267);
 
-  ui.Rect get cashOutButton => _src(55, 1286, 260, 1361);
-  ui.Rect get insertCoinsButton => _src(645, 1286, 850, 1361);
-  ui.Rect get refillWalletButton => _src(285, 1288, 620, 1360);
-  ui.Rect get walletValueMask => _src(310, 1288, 595, 1360);
+  ui.Rect get refillWalletButton => _src(0, 0, 0, 0);
+  ui.Rect get doubleUpButton => _src(0, 0, 0, 0);
+  ui.Rect get collectButton => _src(0, 0, 0, 0);
+  ui.Rect get settingsButton => _src(0, 0, 0, 0);
 
-  ui.Rect get doubleUpButton => _src(326, 1194, 616, 1287);
-  ui.Rect get collectButton => _src(632, 1194, 891, 1287);
-
+  ui.Rect get cardRowBacking => handPanel;
+  ui.Rect get controlClusterFrame => _src(25, 1128, 938, 1400);
+  ui.Rect get walletValueMask => _src(0, 0, 0, 0);
   List<ui.Rect> get bottomValueMasks => <ui.Rect>[
-        _src(70, 1622, 265, 1684),
-        _src(355, 1622, 550, 1684),
-        _src(640, 1622, 835, 1684),
+        _src(0, 0, 0, 0),
+        _src(0, 0, 0, 0),
+        _src(0, 0, 0, 0),
       ];
-
-  List<ui.Rect> get bottomPanelRects => <ui.Rect>[
-        _src(54, 1554, 286, 1638),
-        _src(296, 1554, 646, 1638),
-        _src(656, 1554, 895, 1638),
-      ];
-
-  ui.Rect get settingsButton => _src(862, 30, 930, 105);
-
-  // Compatibility geometry retained for legacy render helpers. The active
-  // main-game renderer uses the approved full-screen cabinet artwork.
-  ui.Rect get titleBanner => _src(145, 90, 760, 520);
-  ui.Rect get zombieFrame => _src(48, 752, 857, 888);
-  ui.Rect get payTable => _src(105, 535, 800, 735);
-
-  double get statusTop => _src(0, 1208, 0, 1208).top;
-  double get statusMessageY => _src(0, 905, 0, 905).top;
-
-  List<ui.Rect> get statusPanels => <ui.Rect>[
-        _src(45, 1205, 285, 1292),
-        _src(333, 1205, 573, 1292),
-        _src(620, 1205, 860, 1292),
-      ];
-
-  ui.Rect get bottomArt => _src(45, 1405, 860, 1608);
-
-  ui.Rect get controlPanel => _src(45, 1110, 891, 1369);
-  ui.Rect get walletStrip => _src(270, 1293, 648, 1367);
+  List<ui.Rect> get bottomPanelRects => bottomValueMasks;
+  ui.Rect get titleBanner => payoutPanel;
+  ui.Rect get zombieFrame => zombieProgressStrip;
+  ui.Rect get payTable => payoutPanel;
+  double get statusTop => machine.point(0, 1128).dy;
+  double get statusMessageY => machine.point(0, 1128).dy;
+  List<ui.Rect> get statusPanels => bottomValueMasks;
+  ui.Rect get bottomArt => _src(0, 0, 0, 0);
+  ui.Rect get controlPanel => controlClusterFrame;
+  ui.Rect get walletStrip => _src(0, 0, 0, 0);
 
   ui.Rect get settingsPanel =>
       ui.Rect.fromLTWH(w * 0.07, h * 0.07, w * 0.86, h * 0.80);
-
   ui.Rect get panelCloseButton =>
-      ui.Rect.fromLTWH(settingsPanel.right - w * 0.085, settingsPanel.top + h * 0.018, w * 0.07, h * 0.042);
-
+      ui.Rect.fromLTWH(
+        settingsPanel.right - w * 0.085,
+        settingsPanel.top + h * 0.018,
+        w * 0.07,
+        h * 0.042,
+      );
   ui.Rect get themePrevButton =>
-      ui.Rect.fromLTWH(settingsPanel.left + w * 0.045, h * 0.25, w * 0.10, h * 0.052);
+      ui.Rect.fromLTWH(
+        settingsPanel.left + w * 0.045,
+        h * 0.25,
+        w * 0.10,
+        h * 0.052,
+      );
   ui.Rect get themeNextButton =>
-      ui.Rect.fromLTWH(settingsPanel.right - w * 0.145, h * 0.25, w * 0.10, h * 0.052);
+      ui.Rect.fromLTWH(
+        settingsPanel.right - w * 0.145,
+        h * 0.25,
+        w * 0.10,
+        h * 0.052,
+      );
   ui.Rect get backPrevButton =>
-      ui.Rect.fromLTWH(settingsPanel.left + w * 0.045, h * 0.39, w * 0.10, h * 0.052);
+      ui.Rect.fromLTWH(
+        settingsPanel.left + w * 0.045,
+        h * 0.39,
+        w * 0.10,
+        h * 0.052,
+      );
   ui.Rect get backNextButton =>
-      ui.Rect.fromLTWH(settingsPanel.right - w * 0.145, h * 0.39, w * 0.10, h * 0.052);
-
+      ui.Rect.fromLTWH(
+        settingsPanel.right - w * 0.145,
+        h * 0.39,
+        w * 0.10,
+        h * 0.052,
+      );
   ui.Offset get settingsTitleCenter =>
       ui.Offset(settingsPanel.center.dx, settingsPanel.top + h * 0.065);
   ui.Offset get themeLabelCenter =>
@@ -2188,7 +2300,6 @@ class _CabinetGeometry {
       ui.Offset(settingsPanel.center.dx, h * 0.418);
   ui.Offset get statisticsTitleCenter =>
       ui.Offset(settingsPanel.center.dx, h * 0.50);
-
   double get statisticsLeft => settingsPanel.left + w * 0.085;
   double get statisticsValueX => settingsPanel.right - w * 0.085;
   double get statisticsTop => h * 0.55;
@@ -2225,10 +2336,10 @@ class _CardView extends PositionComponent with TapCallbacks {
     // The component covers the whole illustrated card well. Keep artwork inside
     // the inner portrait window so the cabinet frame and baked HOLD plate remain visible.
     final faceRect = ui.Rect.fromLTWH(
-      size.x * 0.035,
-      size.y * 0.015,
-      size.x * 0.93,
-      size.y * 0.79,
+      size.x * 0.02,
+      size.y * 0.02,
+      size.x * 0.96,
+      size.y * 0.96,
     );
 
     if (faceAtlas != null) {
