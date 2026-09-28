@@ -973,7 +973,7 @@ class RedBlackPokerGame extends FlameGame {
 
     final cabinet = _cabinetSpriteSheet;
     if (cabinet != null) {
-      final state = round.bonusProgress.clamp(0, 10);
+      final state = round.bonusProgress.clamp(0, 10).toInt();
       final rowH = cabinet.height / 11.0;
       final src = ui.Rect.fromLTWH(
         0,
@@ -1227,23 +1227,6 @@ class RedBlackPokerGame extends FlameGame {
 
   void _renderPayoutTable(ui.Canvas canvas) {
     final g = _geometry;
-    final table = g.payTableTextArea;
-
-    // Hide any old baked text/numbers but preserve the outer parchment frame.
-    canvas.drawRRect(
-      ui.RRect.fromRectAndRadius(table, const ui.Radius.circular(4)),
-      ui.Paint()
-        ..shader = ui.Gradient.linear(
-          table.topCenter,
-          table.bottomCenter,
-          const <Color>[
-            Color(0xFFE8C98E),
-            Color(0xFFD9B779),
-            Color(0xFFE6C688),
-          ],
-          const <double>[0.0, 0.55, 1.0],
-        ),
-    );
 
     const leftLabels = <String>[
       'FIVE OF A KIND',
@@ -1276,12 +1259,14 @@ class RedBlackPokerGame extends FlameGame {
 
     for (var row = 0; row < 5; row++) {
       final y = g.payoutRowY(row);
+      final labelSize = g.machine.scale * 18;
+      final valueSize = g.machine.scale * 19;
 
       _paintText(
         canvas,
         leftLabels[row],
         ui.Offset(g.leftPayoutLabelX, y),
-        fontSize: size.x * 0.022,
+        fontSize: labelSize,
         color: const Color(0xFF321A0E),
         weight: FontWeight.w900,
       );
@@ -1289,7 +1274,7 @@ class RedBlackPokerGame extends FlameGame {
         canvas,
         round.payoutFor(leftRanks[row]).toString(),
         ui.Offset(g.leftPayoutX, y),
-        fontSize: size.x * 0.023,
+        fontSize: valueSize,
         color: const Color(0xFFB31F16),
         weight: FontWeight.w900,
         centered: true,
@@ -1299,7 +1284,7 @@ class RedBlackPokerGame extends FlameGame {
         canvas,
         rightLabels[row],
         ui.Offset(g.rightPayoutLabelX, y),
-        fontSize: size.x * 0.022,
+        fontSize: labelSize,
         color: const Color(0xFF321A0E),
         weight: FontWeight.w900,
       );
@@ -1311,7 +1296,7 @@ class RedBlackPokerGame extends FlameGame {
               : round.highPairPaytableValue
         ).toString(),
         ui.Offset(g.rightPayoutX, y),
-        fontSize: size.x * 0.023,
+        fontSize: valueSize,
         color: const Color(0xFFB31F16),
         weight: FontWeight.w900,
         centered: true,
