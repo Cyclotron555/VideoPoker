@@ -22,14 +22,34 @@ class RedBlackSession {
   RedBlackSession({
     required int startingWin,
     Random? random,
-    this.maxRounds = 6,
+    this.maxRounds = jackpotRounds,
   })  : assert(startingWin > 0),
+        assert(maxRounds > 0),
+        startingWin = startingWin,
         currentWin = startingWin,
         _random = random ?? Random.secure() {
     _resetDeck();
   }
 
+  RedBlackSession.withDeck({
+    required int startingWin,
+    required List<int> drawOrder,
+    this.maxRounds = jackpotRounds,
+  })  : assert(startingWin > 0),
+        assert(maxRounds > 0),
+        assert(drawOrder.isNotEmpty),
+        startingWin = startingWin,
+        currentWin = startingWin,
+        _random = Random(0) {
+    _deck
+      ..clear()
+      ..addAll(drawOrder.reversed);
+  }
+
+  static const int jackpotRounds = 6;
+
   final Random _random;
+  final int startingWin;
   final int maxRounds;
   final List<int> _deck = <int>[];
 
@@ -40,6 +60,7 @@ class RedBlackSession {
 
   bool get canGuess => phase == RedBlackPhase.choosing;
   bool get canCollect => phase == RedBlackPhase.choosing && currentWin > 0;
+  int get multiplier => 1 << roundsWon;
 
   RedBlackTurn guess(RedBlackChoice choice) {
     if (!canGuess) {
@@ -56,7 +77,7 @@ class RedBlackSession {
       phase = RedBlackPhase.busted;
     } else {
       roundsWon += 1;
-      currentWin *= 2;
+      currentWin = startingWin * multiplier;
       if (roundsWon >= maxRounds) {
         phase = RedBlackPhase.jackpot;
       }
