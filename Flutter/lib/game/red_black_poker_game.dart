@@ -2224,10 +2224,10 @@ class _CabinetGeometry {
         _src(745, 890, 900, 1165),
       ];
 
-  ui.Rect get betDownButton => _src(21, 1165, 206, 1348);
-  ui.Rect get betUpButton => _src(238, 1165, 423, 1348);
-  ui.Rect get dealButton => _src(455, 1165, 705, 1348);
-  ui.Rect get drawButton => _src(737, 1165, 942, 1348);
+  ui.Rect get betDownButton => _src(54, 1165, 239, 1348);
+  ui.Rect get betUpButton => _src(249, 1165, 434, 1348);
+  ui.Rect get dealButton => _src(444, 1165, 694, 1348);
+  ui.Rect get drawButton => _src(704, 1165, 909, 1348);
   ui.Rect get betMaxButton => drawButton;
 
   ui.Rect get cashOutButton => _src(20, 1355, 470, 1525);
