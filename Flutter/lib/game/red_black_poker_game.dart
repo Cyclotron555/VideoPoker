@@ -127,7 +127,7 @@ class RedBlackPokerGame extends FlameGame {
     _horrorCardsAtlas = await images.load('horror_cards_grid.jpg');
     _zombieProgressAtlas = await images.load('zombie_progress_atlas.png');
     _halloweenButtonsAtlas = await images.load('halloween_buttons_atlas.png');
-    _layerBackground = await images.load('background001.png');
+    _layerBackground = await images.load('bg2.png');
     _cashPanel = await images.load('cash_panel.png');
     _payoutPanel = await images.load('payout_panel.png');
     _cabinetSpriteSheet = await images.load('cabinet_sprite_sheet.png');
@@ -953,7 +953,11 @@ class RedBlackPokerGame extends FlameGame {
     final viewport = ui.Rect.fromLTWH(0, 0, size.x, size.y);
     canvas.drawRect(viewport, ui.Paint()..color = const Color(0xFF030305));
 
-    _drawLayerAsset(canvas, _layerBackground, g.machine.contentRect);
+    if (_layerBackground != null) {
+      // The decorative background fills the whole phone independently of the
+      // fixed game matrix. Functional panels stay inside the logical canvas.
+      _drawImageCover(canvas, _layerBackground!, viewport, opacity: 1.0);
+    }
 
     _drawLayerAsset(canvas, _payoutPanel, g.payoutPanel);
     _renderPayoutTable(canvas);
