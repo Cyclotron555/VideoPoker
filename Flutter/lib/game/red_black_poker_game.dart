@@ -727,8 +727,8 @@ class RedBlackPokerGame extends FlameGame {
     _mainDrawButton.label = 'DRAW';
     _mainDrawButton.accent = const Color(0xFFBD1722);
     final moneyControls = !_isAnimatingCards && round.canAdjustMoney;
-    _betDownButton.enabled = moneyControls && round.bet > 1;
-    _betUpButton.enabled = moneyControls && round.bet < 5;
+    _betDownButton.enabled = moneyControls && round.bet > PokerRound.minBet;
+    _betUpButton.enabled = moneyControls && round.bet < PokerRound.maxBet;
     _betMaxButton.enabled = !_isAnimatingCards && round.canTransferToCash;
     _cashOutButton.enabled = !_isAnimatingCards && round.canCashOut;
     _insertCoinsButton.enabled = !_isAnimatingCards && round.canAddMoney;
@@ -1100,7 +1100,7 @@ class RedBlackPokerGame extends FlameGame {
       );
       _paintText(
         canvas,
-        (leftRanks[row].basePayout * round.bet).toString(),
+        round.payoutFor(leftRanks[row]).toString(),
         ui.Offset(g.leftPayoutX, y),
         fontSize: size.x * 0.023,
         color: const Color(0xFFB31F16),
@@ -1120,8 +1120,8 @@ class RedBlackPokerGame extends FlameGame {
         canvas,
         (
           row < 4
-              ? rightRanks[row].basePayout * round.bet
-              : 5 * round.bet
+              ? round.payoutFor(rightRanks[row])
+              : round.highPairPaytableValue
         ).toString(),
         ui.Offset(g.rightPayoutX, y),
         fontSize: size.x * 0.023,
