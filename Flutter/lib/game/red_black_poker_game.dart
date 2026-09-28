@@ -2660,16 +2660,13 @@ class _GameButton extends PositionComponent with TapCallbacks {
       final src = enabled && lit ? onSrc : offSrc;
       if (atlas != null && src != null) {
         final target = ui.Rect.fromLTWH(0, 0, size.x, size.y);
-        final scale = math.min(target.width / src.width, target.height / src.height);
-        final dst = ui.Rect.fromCenter(
-          center: target.center,
-          width: src.width * scale,
-          height: src.height * scale,
-        );
+        // These button sheets were authored as resizable UI sprites. Fill the
+        // assigned matrix slot exactly so every ON/OFF state has identical
+        // screen geometry.
         canvas.drawImageRect(
           atlas,
           src,
-          dst,
+          target,
           ui.Paint()..filterQuality = ui.FilterQuality.high,
         );
       }
