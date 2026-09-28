@@ -139,7 +139,7 @@ class RedBlackPokerGame extends FlameGame {
     _drawButtonSheet = await images.load('draw_button.png');
     _cashOutButtonSheet = await images.load('cash_out_button.png');
     _addMoneyButtonSheet = await images.load('add_money_button.png');
-    _buttonsFrame = await images.load('buttons_frame.png');
+    _buttonsFrame = await images.load('buttons_frame2.png');
     for (final name in <String>[
       'bet_minus_off_approved.png',
       'bet_minus_on_approved.png',
@@ -235,7 +235,8 @@ class RedBlackPokerGame extends FlameGame {
       label: 'BET +',
       accent: const Color(0xFFB46D0B),
       spriteAtlas: betSheet,
-      offSrc: cell(betSheet, 2, 2, 1, 0),
+      // Keep BET+ visually red in both logical states, matching BET-.
+      offSrc: cell(betSheet, 2, 2, 1, 1),
       onSrc: cell(betSheet, 2, 2, 1, 1),
       onPressed: () {
         round.changeBet(1);
