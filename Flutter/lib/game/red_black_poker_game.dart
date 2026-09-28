@@ -954,6 +954,11 @@ class RedBlackPokerGame extends FlameGame {
 
     _drawLayerAsset(canvas, _layerBackground, g.machine.contentRect);
 
+    _drawLayerAsset(canvas, _payoutPanel, g.payoutPanel);
+    _renderPayoutTable(canvas);
+
+    // CASH is intentionally rendered after the payout/logo panel so the
+    // top plaque can never be hidden behind the logo artwork.
     _drawLayerAsset(canvas, _cashPanel, g.cashPanel);
     _paintText(
       canvas,
@@ -967,9 +972,6 @@ class RedBlackPokerGame extends FlameGame {
       weight: FontWeight.w900,
       centered: true,
     );
-
-    _drawLayerAsset(canvas, _payoutPanel, g.payoutPanel);
-    _renderPayoutTable(canvas);
 
     final cabinet = _cabinetSpriteSheet;
     if (cabinet != null) {
@@ -995,7 +997,7 @@ class RedBlackPokerGame extends FlameGame {
       canvas,
       'BET ' + round.bet.toString(),
       g.betValueCenter,
-      fontSize: g.machine.scale * 22,
+      fontSize: g.machine.scale * 18,
       color: const Color(0xFFFFE3A0),
       weight: FontWeight.w900,
       centered: true,
@@ -2167,11 +2169,11 @@ class _CabinetGeometry {
   ui.Rect _src(double l, double t, double r, double b) =>
       machine.rect(l, t, r, b);
 
-  ui.Rect get cashPanel => _src(300, 5, 663, 186);
-  ui.Rect get payoutPanel => _src(55, 135, 908, 704);
-  ui.Rect get payTableTextArea => _src(165, 410, 850, 640);
-  ui.Rect get zombieProgressStrip => _src(45, 695, 918, 840);
-  ui.Rect get handPanel => _src(42, 835, 921, 1128);
+  ui.Rect get cashPanel => _src(305, -5, 658, 155);
+  ui.Rect get payoutPanel => _src(45, 160, 918, 705);
+  ui.Rect get payTableTextArea => _src(160, 420, 855, 650);
+  ui.Rect get zombieProgressStrip => _src(45, 700, 918, 845);
+  ui.Rect get handPanel => _src(40, 835, 923, 1190);
 
   double get leftPayoutLabelX => _src(180, 0, 180, 0).left;
   double get leftPayoutX => _src(450, 0, 450, 0).left;
@@ -2195,22 +2197,22 @@ class _CabinetGeometry {
   }
 
   List<ui.Rect> get cardRects => <ui.Rect>[
-        _src(75, 895, 212, 1110),
-        _src(244, 895, 381, 1110),
-        _src(413, 895, 550, 1110),
-        _src(582, 895, 719, 1110),
-        _src(751, 895, 888, 1110),
+        _src(65, 890, 220, 1165),
+        _src(235, 890, 390, 1165),
+        _src(405, 890, 560, 1165),
+        _src(575, 890, 730, 1165),
+        _src(745, 890, 900, 1165),
       ];
 
-  ui.Rect get betDownButton => _src(45, 1145, 215, 1257);
-  ui.Rect get betUpButton => _src(220, 1145, 390, 1257);
-  ui.Rect get dealButton => _src(400, 1145, 640, 1257);
-  ui.Rect get drawButton => _src(670, 1145, 915, 1257);
+  ui.Rect get betDownButton => _src(55, 1200, 225, 1315);
+  ui.Rect get betUpButton => _src(230, 1200, 400, 1315);
+  ui.Rect get dealButton => _src(405, 1200, 650, 1315);
+  ui.Rect get drawButton => _src(660, 1200, 910, 1315);
   ui.Rect get betMaxButton => drawButton;
 
-  ui.Rect get cashOutButton => _src(120, 1270, 420, 1382);
-  ui.Rect get insertCoinsButton => _src(540, 1270, 840, 1382);
-  ui.Offset get betValueCenter => machine.point(217, 1267);
+  ui.Rect get cashOutButton => _src(100, 1325, 425, 1445);
+  ui.Rect get insertCoinsButton => _src(535, 1325, 860, 1445);
+  ui.Offset get betValueCenter => machine.point(228, 1185);
 
   ui.Rect get refillWalletButton => _src(0, 0, 0, 0);
   ui.Rect get doubleUpButton => _src(0, 0, 0, 0);
