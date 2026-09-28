@@ -1270,7 +1270,7 @@ class RedBlackPokerGame extends FlameGame {
     for (var row = 0; row < 5; row++) {
       final y = g.payoutRowY(row);
       final labelSize = g.machine.scale * 25;
-      final valueSize = g.machine.scale * 31;
+      final valueSize = g.machine.scale * 30;
 
       _paintText(
         canvas,
