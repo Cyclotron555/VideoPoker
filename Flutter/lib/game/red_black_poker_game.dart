@@ -219,6 +219,9 @@ class RedBlackPokerGame extends FlameGame {
       spriteAtlas: betSheet,
       offSrc: cell(betSheet, 2, 2, 0, 0),
       onSrc: cell(betSheet, 2, 2, 0, 1),
+      // Zoom the OFF sprite slightly inside the exact same 0,0 target box so
+      // its visible frame matches the lit state instead of appearing smaller.
+      offSourceInsetFraction: 0.04,
       onPressed: () {
         round.changeBet(-1);
         _syncView();
@@ -1266,7 +1269,7 @@ class RedBlackPokerGame extends FlameGame {
 
     for (var row = 0; row < 5; row++) {
       final y = g.payoutRowY(row);
-      final labelSize = g.machine.scale * 26;
+      final labelSize = g.machine.scale * 25;
       final valueSize = g.machine.scale * 31;
 
       _paintText(
