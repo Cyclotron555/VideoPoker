@@ -7,6 +7,7 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
+import 'layout/machine_layout.dart';
 import 'model/auto_hold_advisor.dart';
 import 'model/hand_rank.dart';
 import 'model/poker_round.dart';
@@ -876,7 +877,12 @@ class RedBlackPokerGame extends FlameGame {
 
   void _renderMasterCabinet(ui.Canvas canvas) {
     final art = _masterCabinetArt;
-    final rect = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+    final viewport = ui.Rect.fromLTWH(0, 0, size.x, size.y);
+    final machine = MachineLayout(size.x, size.y);
+    final rect = machine.contentRect;
+
+    canvas.drawRect(viewport, ui.Paint()..color = const Color(0xFF050506));
+
     if (art == null) {
       canvas.drawRect(rect, ui.Paint()..color = const Color(0xFF050506));
       return;
@@ -1986,20 +1992,14 @@ class RedBlackPokerGame extends FlameGame {
 }
 
 class _CabinetGeometry {
-  _CabinetGeometry(this.w, this.h);
+  _CabinetGeometry(this.w, this.h) : machine = MachineLayout(w, h);
 
   final double w;
   final double h;
+  final MachineLayout machine;
 
   ui.Rect _src(double l, double t, double r, double b) {
-    const sw = 905.0;
-    const sh = 1738.0;
-    return ui.Rect.fromLTRB(
-      w * l / sw,
-      h * t / sh,
-      w * r / sw,
-      h * b / sh,
-    );
+    return machine.rect(l, t, r, b);
   }
 
   double get side => w * 0.04;
