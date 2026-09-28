@@ -1262,15 +1262,15 @@ class RedBlackPokerGame extends FlameGame {
 
     for (var row = 0; row < 5; row++) {
       final y = g.payoutRowY(row);
-      final labelSize = g.machine.scale * 20;
-      final valueSize = g.machine.scale * 21;
+      final labelSize = g.machine.scale * 30;
+      final valueSize = g.machine.scale * 31;
 
       _paintText(
         canvas,
         leftLabels[row],
         ui.Offset(g.leftPayoutLabelX, y),
         fontSize: labelSize,
-        color: const Color(0xFF321A0E),
+        color: const Color(0xFF241006),
         weight: FontWeight.w900,
         halloweenFont: true,
       );
@@ -1279,7 +1279,7 @@ class RedBlackPokerGame extends FlameGame {
         round.payoutFor(leftRanks[row]).toString(),
         ui.Offset(g.leftPayoutX, y),
         fontSize: valueSize,
-        color: const Color(0xFFB31F16),
+        color: const Color(0xFFB0120A),
         weight: FontWeight.w900,
         centered: true,
       );
@@ -1289,7 +1289,7 @@ class RedBlackPokerGame extends FlameGame {
         rightLabels[row],
         ui.Offset(g.rightPayoutLabelX, y),
         fontSize: labelSize,
-        color: const Color(0xFF321A0E),
+        color: const Color(0xFF241006),
         weight: FontWeight.w900,
         halloweenFont: true,
       );
@@ -1302,7 +1302,7 @@ class RedBlackPokerGame extends FlameGame {
         ).toString(),
         ui.Offset(g.rightPayoutX, y),
         fontSize: valueSize,
-        color: const Color(0xFFB31F16),
+        color: const Color(0xFFB0120A),
         weight: FontWeight.w900,
         centered: true,
       );
@@ -1741,7 +1741,7 @@ class RedBlackPokerGame extends FlameGame {
         (rows[i].basePayout * round.bet).toString(),
         ui.Offset(x + width * 0.35, y),
         fontSize: size.x * 0.026,
-        color: const Color(0xFFB31F16),
+        color: const Color(0xFFB0120A),
         weight: FontWeight.w900,
         centered: true,
       );
@@ -2143,7 +2143,7 @@ class RedBlackPokerGame extends FlameGame {
     bool halloweenFont = false,
   }) {
     final style = halloweenFont
-        ? GoogleFonts.pirataOne(
+        ? GoogleFonts.rye(
             color: color,
             fontSize: fontSize,
             fontWeight: FontWeight.w400,
@@ -2188,12 +2188,12 @@ class _CabinetGeometry {
   ui.Rect get zombieProgressStrip => _src(45, 700, 918, 845);
   ui.Rect get handPanel => _src(40, 835, 923, 1190);
 
-  double get leftPayoutLabelX => _src(165, 0, 165, 0).left;
-  double get leftPayoutX => _src(420, 0, 420, 0).left;
-  double get rightPayoutLabelX => _src(500, 0, 500, 0).left;
-  double get rightPayoutX => _src(790, 0, 790, 0).left;
+  double get leftPayoutLabelX => _src(150, 0, 150, 0).left;
+  double get leftPayoutX => _src(390, 0, 390, 0).left;
+  double get rightPayoutLabelX => _src(475, 0, 475, 0).left;
+  double get rightPayoutX => _src(755, 0, 755, 0).left;
   double payoutRowY(int row) =>
-      _src(0, 435 + row * 43, 0, 435 + row * 43).top;
+      _src(0, 432 + row * 47, 0, 432 + row * 47).top;
 
   List<ui.Rect> get zombieSlots {
     final frame = zombieProgressStrip;
