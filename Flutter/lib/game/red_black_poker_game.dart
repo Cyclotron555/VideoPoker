@@ -2217,15 +2217,15 @@ class _CabinetGeometry {
         _src(745, 890, 900, 1165),
       ];
 
-  ui.Rect get betDownButton => _src(15, 1175, 222, 1335);
-  ui.Rect get betUpButton => _src(226, 1175, 433, 1335);
-  ui.Rect get dealButton => _src(437, 1175, 704, 1335);
-  ui.Rect get drawButton => _src(708, 1175, 948, 1335);
+  ui.Rect get betDownButton => _src(8, 1165, 225, 1348);
+  ui.Rect get betUpButton => _src(228, 1165, 445, 1348);
+  ui.Rect get dealButton => _src(448, 1165, 728, 1348);
+  ui.Rect get drawButton => _src(731, 1165, 955, 1348);
   ui.Rect get betMaxButton => drawButton;
 
-  ui.Rect get cashOutButton => _src(45, 1340, 475, 1495);
-  ui.Rect get insertCoinsButton => _src(488, 1340, 918, 1495);
-  ui.Offset get betValueCenter => machine.point(228, 1160);
+  ui.Rect get cashOutButton => _src(20, 1355, 470, 1525);
+  ui.Rect get insertCoinsButton => _src(493, 1355, 943, 1525);
+  ui.Offset get betValueCenter => machine.point(228, 1148);
 
   ui.Rect get refillWalletButton => _src(0, 0, 0, 0);
   ui.Rect get doubleUpButton => _src(0, 0, 0, 0);
