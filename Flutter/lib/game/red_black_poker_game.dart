@@ -2370,27 +2370,14 @@ class _CardView extends PositionComponent with TapCallbacks {
         ui.Paint()..filterQuality = ui.FilterQuality.high,
       );
     } else if (backImage != null) {
-      // Card backs are individual portrait assets. Contain them instead of
-      // stretching/cropping so the full Halloween design is visible.
-      canvas.drawRRect(
-        ui.RRect.fromRectAndRadius(faceRect, const ui.Radius.circular(4)),
-        ui.Paint()..color = const Color(0xFF08090B),
-      );
+      // Card backs occupy the exact same live rectangle as card fronts.
+      // The selected back design is still controlled only from the Control Panel.
       final sw = backImage!.width.toDouble();
       final sh = backImage!.height.toDouble();
-      final scale = math.min(faceRect.width / sw, faceRect.height / sh);
-      final dw = sw * scale;
-      final dh = sh * scale;
-      final dst = ui.Rect.fromLTWH(
-        faceRect.center.dx - dw / 2,
-        faceRect.center.dy - dh / 2,
-        dw,
-        dh,
-      );
       canvas.drawImageRect(
         backImage!,
         ui.Rect.fromLTWH(0, 0, sw, sh),
-        dst,
+        faceRect,
         ui.Paint()..filterQuality = ui.FilterQuality.high,
       );
     }
