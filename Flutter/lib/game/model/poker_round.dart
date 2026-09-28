@@ -25,6 +25,12 @@ class PokerRound {
         credits = startingCredits,
         wallet = startingWallet;
 
+  static const int minBet = 1;
+  static const int maxBet = 10;
+  static const int transferIncrement = 5;
+  static const int addMoneyIncrement = 10;
+  static const int highPairDisplayedPayout = 5;
+
   final Deck _deck;
   final HandEvaluator _evaluator;
   final int startingCredits;
@@ -39,7 +45,7 @@ class PokerRound {
   HandRank result = HandRank.none;
   int credits;
   int wallet;
-  int bet = 1;
+  int bet = minBet;
   int pendingWin = 0;
   int bonusProgress = 0;
 
@@ -63,6 +69,9 @@ class PokerRound {
 
   bool get canAddMoney => canAdjustMoney;
 
+  bool get canChangeBet =>
+      phase == RoundPhase.idle || phase == RoundPhase.result;
+
   // Compatibility getters retained for older tests/callers.
   bool get canInsertCoins => canTransferToCash;
   bool get canRefillWallet => canAdjustMoney && wallet == 0;
@@ -73,18 +82,21 @@ class PokerRound {
 
   bool get canDrawReplacement => phase == RoundPhase.chooseHolds;
 
-  bool get canPressMainDraw =>
-      canStartHand || canDrawReplacement;
+  bool get canPressMainDraw => canStartHand || canDrawReplacement;
 
   bool get hasPendingWin =>
       phase == RoundPhase.winDecision && pendingWin > 0;
 
+  int payoutFor(HandRank rank) => rank.basePayout * bet;
+
+  int get highPairPaytableValue => highPairDisplayedPayout * bet;
+
   void changeBet(int delta) {
-    if (phase != RoundPhase.idle && phase != RoundPhase.result) return;
-    bet = (bet + delta).clamp(1, 5);
+    if (!canChangeBet) return;
+    bet = (bet + delta).clamp(minBet, maxBet);
   }
 
-  int transferToCash([int amount = 5]) {
+  int transferToCash([int amount = transferIncrement]) {
     if (!canTransferToCash || amount <= 0) return 0;
     final transfer = amount > wallet ? wallet : amount;
     wallet -= transfer;
@@ -93,9 +105,9 @@ class PokerRound {
   }
 
   // Legacy name from the first Flutter pass.
-  int insertCoins([int amount = 10]) => transferToCash(amount);
+  int insertCoins([int amount = transferIncrement]) => transferToCash(amount);
 
-  int addMoney([int amount = 5]) {
+  int addMoney([int amount = addMoneyIncrement]) {
     if (!canAddMoney || amount <= 0) return 0;
     wallet += amount;
     return amount;
@@ -150,7 +162,7 @@ class PokerRound {
 
     final evaluation = _evaluator.evaluateDetailed(cards);
     result = evaluation.rank;
-    pendingWin = result.basePayout * bet;
+    pendingWin = payoutFor(result);
 
     if (evaluation.qualifyingHighPair) {
       bonusProgress = (bonusProgress + 1).clamp(0, bonusTarget);
