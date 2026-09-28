@@ -219,7 +219,6 @@ class RedBlackPokerGame extends FlameGame {
       spriteAtlas: betSheet,
       offSrc: cell(betSheet, 2, 2, 0, 0),
       onSrc: cell(betSheet, 2, 2, 0, 1),
-      offSourceInsetFraction: 0.055,
       onPressed: () {
         round.changeBet(-1);
         _syncView();
@@ -232,7 +231,6 @@ class RedBlackPokerGame extends FlameGame {
       spriteAtlas: betSheet,
       offSrc: cell(betSheet, 2, 2, 1, 0),
       onSrc: cell(betSheet, 2, 2, 1, 1),
-      offSourceInsetFraction: 0.055,
       onPressed: () {
         round.changeBet(1);
         _syncView();
@@ -2669,9 +2667,8 @@ class _GameButton extends PositionComponent with TapCallbacks {
         final target = ui.Rect.fromLTWH(0, 0, size.x, size.y);
         var source = src;
 
-        // Some generated OFF sprites have more transparent breathing room than
-        // their lit counterparts. Crop only that transparent margin so OFF and
-        // ON states occupy the same visible footprint without changing hitboxes.
+        // Sprite cells are normalized to the same internal origin and visible
+        // bounds, so both ON and OFF states render from local 0,0 without drift.
         if (!usingOn && offSourceInsetFraction > 0) {
           final fx = (src.width * offSourceInsetFraction)
               .clamp(0.0, src.width * 0.20);
