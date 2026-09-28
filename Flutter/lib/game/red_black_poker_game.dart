@@ -966,10 +966,10 @@ class RedBlackPokerGame extends FlameGame {
       round.cash.toString(),
       ui.Offset(
         g.cashPanel.center.dx,
-        g.cashPanel.top + g.cashPanel.height * 0.68,
+        g.cashPanel.top + g.cashPanel.height * 0.71,
       ),
-      fontSize: g.machine.scale * 38,
-      color: const Color(0xFFFFE32D),
+      fontSize: g.machine.scale * 39,
+      color: const Color(0xFFFFB52E),
       weight: FontWeight.w900,
       centered: true,
     );
