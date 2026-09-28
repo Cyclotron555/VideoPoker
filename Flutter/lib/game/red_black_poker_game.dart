@@ -50,6 +50,7 @@ class RedBlackPokerGame extends FlameGame {
   ui.Image? _drawButtonSheet;
   ui.Image? _cashOutButtonSheet;
   ui.Image? _addMoneyButtonSheet;
+  ui.Image? _buttonsFrame;
 
   final AutoHoldAdvisor _autoHoldAdvisor = const AutoHoldAdvisor();
   Duration cardDisplayDelay = const Duration(milliseconds: 275);
@@ -137,6 +138,7 @@ class RedBlackPokerGame extends FlameGame {
     _drawButtonSheet = await images.load('draw_button.png');
     _cashOutButtonSheet = await images.load('cash_out_button.png');
     _addMoneyButtonSheet = await images.load('add_money_button.png');
+    _buttonsFrame = await images.load('buttons_frame.png');
     for (final name in <String>[
       'bet_minus_off_approved.png',
       'bet_minus_on_approved.png',
@@ -998,6 +1000,9 @@ class RedBlackPokerGame extends FlameGame {
         ui.Paint()..filterQuality = ui.FilterQuality.high,
       );
     }
+
+    // Decorative control plate: above the background, below all live buttons.
+    _drawLayerAsset(canvas, _buttonsFrame, g.buttonsFrame);
 
     _drawLayerAsset(canvas, _handPanel, g.handPanel);
 
@@ -2194,6 +2199,7 @@ class _CabinetGeometry {
   ui.Rect get payTableTextArea => _src(160, 420, 855, 650);
   ui.Rect get zombieProgressStrip => _src(45, 700, 918, 845);
   ui.Rect get handPanel => _src(40, 835, 923, 1190);
+  ui.Rect get buttonsFrame => _src(5, 1150, 958, 1575);
 
   double get leftPayoutLabelX => _src(150, 0, 150, 0).left;
   double get leftPayoutX => _src(410, 0, 410, 0).left;
