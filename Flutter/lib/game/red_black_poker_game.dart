@@ -217,11 +217,11 @@ class RedBlackPokerGame extends FlameGame {
       label: 'BET -',
       accent: const Color(0xFF8E4D0B),
       spriteAtlas: betSheet,
-      offSrc: cell(betSheet, 2, 2, 0, 0),
+      // BET- stays visually lit/red even at the minimum bet. It can still be
+      // disabled logically, but both visual states use the exact same sprite
+      // origin and dimensions so there is no size/alignment jump.
+      offSrc: cell(betSheet, 2, 2, 0, 1),
       onSrc: cell(betSheet, 2, 2, 0, 1),
-      // Zoom the OFF sprite slightly inside the exact same 0,0 target box so
-      // its visible frame matches the lit state instead of appearing smaller.
-      offSourceInsetFraction: 0.04,
       onPressed: () {
         round.changeBet(-1);
         _syncView();
@@ -2224,10 +2224,10 @@ class _CabinetGeometry {
         _src(745, 890, 900, 1165),
       ];
 
-  ui.Rect get betDownButton => _src(8, 1165, 225, 1348);
-  ui.Rect get betUpButton => _src(228, 1165, 445, 1348);
-  ui.Rect get dealButton => _src(448, 1165, 728, 1348);
-  ui.Rect get drawButton => _src(731, 1165, 955, 1348);
+  ui.Rect get betDownButton => _src(21, 1165, 206, 1348);
+  ui.Rect get betUpButton => _src(238, 1165, 423, 1348);
+  ui.Rect get dealButton => _src(455, 1165, 705, 1348);
+  ui.Rect get drawButton => _src(737, 1165, 942, 1348);
   ui.Rect get betMaxButton => drawButton;
 
   ui.Rect get cashOutButton => _src(20, 1355, 470, 1525);
